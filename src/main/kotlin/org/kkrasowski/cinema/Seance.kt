@@ -13,7 +13,6 @@ sealed class Seance {
     }
 
     data class Scheduled(private val room: Room, private val film: Film, private val startTime: LocalDateTime) : Seance() {
-
         val startsAt: LocalDateTime
             get() = startTime
 
@@ -28,5 +27,15 @@ sealed class Seance {
 
         val filmTitle: String
             get() = film.title
+
+        val roomName: RoomName
+            get() = room.name
+
+        fun clashesWith(seance: Scheduled): Boolean {
+            return seance.maintenanceEndsAt >= this.startsAt && seance.maintenanceEndsAt <= this.maintenanceEndsAt
+                    || seance.startsAt >= this.startsAt && seance.startsAt <= this.maintenanceEndsAt
+        }
     }
+
+    object Declined : Seance()
 }

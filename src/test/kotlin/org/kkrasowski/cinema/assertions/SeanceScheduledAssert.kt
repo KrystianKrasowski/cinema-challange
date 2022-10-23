@@ -5,9 +5,9 @@ import org.kkrasowski.cinema.Seance
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-class ScheduledSeanceAssert(seance: Seance.Scheduled) : AbstractAssert<ScheduledSeanceAssert, Seance.Scheduled>(seance, ScheduledSeanceAssert::class.java) {
+class SeanceScheduledAssert(seance: Seance.Scheduled) : AbstractAssert<SeanceScheduledAssert, Seance.Scheduled>(seance, SeanceScheduledAssert::class.java) {
 
-    fun startsAt(dateTime: String): ScheduledSeanceAssert {
+    fun startsAt(dateTime: String): SeanceScheduledAssert {
         val expectedStartsAt = dateTime.toLocalDateTime()
 
         if (actual.startsAt != expectedStartsAt) {
@@ -17,7 +17,7 @@ class ScheduledSeanceAssert(seance: Seance.Scheduled) : AbstractAssert<Scheduled
         return myself
     }
 
-    fun endsAt(dateTime: String): ScheduledSeanceAssert {
+    fun endsAt(dateTime: String): SeanceScheduledAssert {
         val expectedEndsAt = dateTime.toLocalDateTime()
 
         if (actual.endsAt != expectedEndsAt) {
@@ -27,7 +27,7 @@ class ScheduledSeanceAssert(seance: Seance.Scheduled) : AbstractAssert<Scheduled
         return myself
     }
 
-    fun maintenanceStartsAt(dateTime: String): ScheduledSeanceAssert {
+    fun maintenanceStartsAt(dateTime: String): SeanceScheduledAssert {
         val expectedStartsAt = dateTime.toLocalDateTime()
 
         if (actual.maintenanceStartsAt != expectedStartsAt) {
@@ -37,7 +37,7 @@ class ScheduledSeanceAssert(seance: Seance.Scheduled) : AbstractAssert<Scheduled
         return myself
     }
 
-    fun maintenanceEndsAt(dateTime: String): ScheduledSeanceAssert {
+    fun maintenanceEndsAt(dateTime: String): SeanceScheduledAssert {
         val expectedEndsAt = dateTime.toLocalDateTime()
 
         if (actual.maintenanceEndsAt != expectedEndsAt) {
@@ -47,7 +47,7 @@ class ScheduledSeanceAssert(seance: Seance.Scheduled) : AbstractAssert<Scheduled
         return myself
     }
 
-    fun filmTitleIs(title: String): ScheduledSeanceAssert {
+    fun filmTitleIs(title: String): SeanceScheduledAssert {
         if (actual.filmTitle != title) {
             failWithMessage("Expected film title to be <%s>, but was <%s>", title, actual.filmTitle)
         }
