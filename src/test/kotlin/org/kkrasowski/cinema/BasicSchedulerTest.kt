@@ -75,12 +75,73 @@ class BasicSchedulerTest {
         // then
         assertThat(seance).isDeclined()
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = [
+        "2022-10-21T00:00:00",
+        "2022-10-21T01:00:00",
+        "2022-10-21T02:00:00",
+        "2022-10-21T03:00:00",
+        "2022-10-21T04:00:00",
+        "2022-10-21T05:00:00",
+        "2022-10-21T06:00:00",
+        "2022-10-21T07:00:00",
+        "2022-10-21T07:59:59",
+        "2022-10-21T19:00:01",
+        "2022-10-21T20:00:00",
+        "2022-10-21T21:00:00",
+        "2022-10-21T22:00:00",
+        "2022-10-21T23:00:00",
+    ])
+    fun `the one where the basic seance is scheduled on invalid time`(startsAt: String) {
+        // given
+        basicScheduler = BasicSchedulerConfigurer(cinemaScheduleRepository)
+            .hasRoom {
+                name("Room 1")
+                needs1HourOfMaintenanceTime()
+            }
+            .opensAtOclock(8)
+            .closesAtOclock(22)
+            .configure()
+
+        // when
+        val film = Film("Cinderella", Duration.ofHours(2))
+        val room = RoomName("Room 1")
+        val seance = basicScheduler.schedule(film, room, LocalDateTime.parse(startsAt))
+
+        // then
+        assertThat(seance).isDeclined()
+    }
+
+    // 17:00 - 20:00 from Monday to Sunday
+    fun `the one where the premiere seance is scheduled on invalid time`() {
+
+    }
+
+    fun `the one where 3D glasses are required by given the film`() {
+
+    }
+
+    // Isn't it the same as occupation?
+    fun `the one where room is unavailable for given time`() {
+
+    }
+
+    fun `the one where given room does not exist`() {
+
+    }
+
+    fun `the one where given start time is in the past`() {
+
+    }
 }
 
 private class BasicSchedulerConfigurer(private val cinemaScheduleRepository: CinemaScheduleRepositoryMock) {
 
     private val rooms = mutableListOf<Room>()
     private val seances = mutableListOf<Seance.Scheduled>()
+    private var openingHour = Duration.parse("PT1H")
+    private var closingHour = Duration.parse("PT23H")
 
     fun hasRoom(roomConfigurer: RoomConfigurer.() -> Unit) = apply {
         rooms.add(RoomConfigurer().apply(roomConfigurer).build())
@@ -90,11 +151,17 @@ private class BasicSchedulerConfigurer(private val cinemaScheduleRepository: Cin
         this.seances.add(ScheduledSeanceConfigurer().apply(configurer).build())
     }
 
+    fun opensAtOclock(hour: Long) = apply { this.openingHour = Duration.ofHours(hour) }
+
+    fun closesAtOclock(hour: Long) = apply { this.closingHour = Duration.ofHours(hour) }
+
     fun configure() = BasicScheduler(
         cinemaScheduleRepository.apply {
             cinemaSchedule = CinemaSchedule(
                 rooms = Rooms(rooms.toList()),
-                seances = ScheduledSeances(seances.toList())
+                seances = ScheduledSeances(seances.toList()),
+                openingHour = openingHour,
+                closingHour = closingHour
             )
         }
     )

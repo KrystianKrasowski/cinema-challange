@@ -1,6 +1,8 @@
 package org.kkrasowski.cinema
 
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalAmount
 
 sealed class Seance {
 
@@ -31,10 +33,21 @@ sealed class Seance {
         val roomName: RoomName
             get() = room.name
 
+        private val today
+            get() = startsAt.truncatedTo(ChronoUnit.DAYS)
+
         fun clashesWith(seance: Scheduled): Boolean {
             return seance.maintenanceEndsAt >= this.startsAt && seance.maintenanceEndsAt <= this.maintenanceEndsAt
                     || seance.startsAt >= this.startsAt && seance.startsAt <= this.maintenanceEndsAt
         }
+
+        fun startsAfter(time: TemporalAmount): Boolean = today
+            .plus(time)
+            .let { startsAt >= it }
+
+        fun endsBefore(time: TemporalAmount): Boolean = today
+            .plus(time)
+            .let { maintenanceEndsAt <= it }
     }
 
     object Declined : Seance()
