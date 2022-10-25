@@ -15,17 +15,16 @@ class BasicSchedulerTest {
     }
 
     private val cinemaScheduleRepository = CinemaScheduleRepositoryMock()
-    private lateinit var basicScheduler: BasicScheduler
 
     @Test
     fun `the one where film is scheduled`() {
         // given
-        basicScheduler = BasicSchedulerConfigurer(cinemaScheduleRepository)
+        val basicScheduler = BasicSchedulerConfigurer(cinemaScheduleRepository)
             .hasRoom(room1)
             .configure()
 
         // when
-        val film = Film("Cinderella", Duration.ofSeconds(9000))
+        val film = film2DOf("Cinderella", Duration.ofSeconds(9000))
         val room = RoomName("Room 1")
         val startTime = LocalDateTime.parse("2022-10-21T10:00:00")
         val seance = basicScheduler.schedule(film, room, startTime)
@@ -55,7 +54,7 @@ class BasicSchedulerTest {
     ])
     fun `the one where room is occupied for given film`(startsAt: String) {
         // given
-        basicScheduler = BasicSchedulerConfigurer(cinemaScheduleRepository)
+        val basicScheduler = BasicSchedulerConfigurer(cinemaScheduleRepository)
             .hasRoom(room1)
             .hasScheduledSeance {
                 room(room1)
@@ -68,7 +67,7 @@ class BasicSchedulerTest {
             .configure()
 
         // when
-        val film = Film("Cinderella", Duration.ofMinutes(150))
+        val film = film2DOf("Cinderella", Duration.ofMinutes(150))
         val room = RoomName("Room 1")
         val seance = basicScheduler.schedule(film, room, LocalDateTime.parse(startsAt))
 
@@ -95,7 +94,7 @@ class BasicSchedulerTest {
     ])
     fun `the one where the basic seance is scheduled on invalid time`(startsAt: String) {
         // given
-        basicScheduler = BasicSchedulerConfigurer(cinemaScheduleRepository)
+        val basicScheduler = BasicSchedulerConfigurer(cinemaScheduleRepository)
             .hasRoom {
                 name("Room 1")
                 needs1HourOfMaintenanceTime()
@@ -105,7 +104,7 @@ class BasicSchedulerTest {
             .configure()
 
         // when
-        val film = Film("Cinderella", Duration.ofHours(2))
+        val film = film2DOf("Cinderella", Duration.ofHours(2))
         val room = RoomName("Room 1")
         val seance = basicScheduler.schedule(film, room, LocalDateTime.parse(startsAt))
 
@@ -118,8 +117,22 @@ class BasicSchedulerTest {
 
     }
 
+    @Test
     fun `the one where 3D glasses are required by given the film`() {
+        // given
+        val basicScheduler = BasicSchedulerConfigurer(cinemaScheduleRepository)
+            .hasRoom(room1)
+            .configure()
 
+        // when
+        val film = film3DOf("Avatar", Duration.ofHours(3))
+        val room = RoomName("Room 1")
+        val seance = basicScheduler.schedule(film, room, LocalDateTime.parse("2022-10-21T12:00:00"))
+
+        // then
+        assertThat(seance)
+            .isScheduled()
+            .requires3DGlasses()
     }
 
     // Isn't it the same as occupation?
@@ -205,6 +218,7 @@ private class FilmConfigurer {
 
     private var title = ""
     private var duration = Duration.ofHours(0)
+    private var type = Film.DisplayType.DISPLAY_2D
 
     fun title(title: String) = apply { this.title = title }
 
@@ -212,6 +226,11 @@ private class FilmConfigurer {
 
     fun build() = Film(
         title = title,
-        duration = duration
+        duration = duration,
+        displayType = type
     )
 }
+
+fun film2DOf(title: String, duration: Duration) = Film(title, duration, Film.DisplayType.DISPLAY_2D)
+
+fun film3DOf(title: String, duration: Duration) = Film(title, duration, Film.DisplayType.DISPLAY_3D)

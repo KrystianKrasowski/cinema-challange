@@ -1,6 +1,7 @@
 package org.kkrasowski.cinema.assertions
 
 import org.assertj.core.api.AbstractAssert
+import org.kkrasowski.cinema.Film
 import org.kkrasowski.cinema.Seance
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -51,6 +52,14 @@ class SeanceScheduledAssert(seance: Seance.Scheduled) : AbstractAssert<SeanceSch
         if (actual.filmTitle != title) {
             failWithMessage("Expected film title to be <%s>, but was <%s>", title, actual.filmTitle)
         }
+        return myself
+    }
+
+    fun requires3DGlasses(): SeanceScheduledAssert {
+        if (!actual.requires3DGlasses) {
+            failWithMessage("Expected film to require 3d glasses")
+        }
+
         return myself
     }
 
