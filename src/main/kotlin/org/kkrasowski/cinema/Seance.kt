@@ -33,6 +33,9 @@ sealed class Seance {
         val requires3DGlasses: Boolean
             get() = film.displayType == Film.DisplayType.DISPLAY_3D
 
+        val filmType: Film.FilmType
+            get() = film.filmType
+
         val roomName: RoomName
             get() = room.name
 

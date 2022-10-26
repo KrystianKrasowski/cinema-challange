@@ -99,8 +99,8 @@ class BasicSchedulerTest {
                 name("Room 1")
                 needs1HourOfMaintenanceTime()
             }
-            .opensAtOclock(8)
-            .closesAtOclock(22)
+            .opensAtOClock(8)
+            .closesAtOClock(22)
             .configure()
 
         // when
@@ -112,9 +112,51 @@ class BasicSchedulerTest {
         assertThat(seance).isDeclined()
     }
 
-    // 17:00 - 20:00 from Monday to Sunday
-    fun `the one where the premiere seance is scheduled on invalid time`() {
+    @ParameterizedTest
+    @ValueSource(strings = [
+        "2022-10-21T00:00:00",
+        "2022-10-21T01:00:00",
+        "2022-10-21T02:00:00",
+        "2022-10-21T03:00:00",
+        "2022-10-21T04:00:00",
+        "2022-10-21T05:00:00",
+        "2022-10-21T06:00:00",
+        "2022-10-21T07:00:00",
+        "2022-10-21T08:00:00",
+        "2022-10-21T09:00:00",
+        "2022-10-21T10:00:00",
+        "2022-10-21T11:00:00",
+        "2022-10-21T12:00:00",
+        "2022-10-21T13:00:00",
+        "2022-10-21T14:00:00",
+        "2022-10-21T15:00:00",
+        "2022-10-21T16:00:00",
+        "2022-10-21T16:59:59",
+        "2022-10-21T18:00:01",
+        "2022-10-21T19:00:00",
+        "2022-10-21T20:00:00",
+        "2022-10-21T21:00:00",
+        "2022-10-21T22:00:00",
+        "2022-10-21T23:00:00",
+    ])
+    fun `the one where the premiere seance is scheduled on invalid time`(startsAt: String) {
+        // given
+        val basicScheduler = BasicSchedulerConfigurer(cinemaScheduleRepository)
+            .hasRoom {
+                name("Room 1")
+                needs1HourOfMaintenanceTime()
+            }
+            .premieresStartsAtOClock(17)
+            .premieresEndsAtOClock(21)
+            .configure()
 
+        // when
+        val film = premiere2DOf("Cinderella 3", Duration.ofHours(2))
+        val room = RoomName("Room 1")
+        val seance = basicScheduler.schedule(film, room, LocalDateTime.parse(startsAt))
+
+        // then
+        assertThat(seance).isDeclined()
     }
 
     @Test
@@ -155,6 +197,8 @@ private class BasicSchedulerConfigurer(private val cinemaScheduleRepository: Cin
     private val seances = mutableListOf<Seance.Scheduled>()
     private var openingHour = Duration.parse("PT1H")
     private var closingHour = Duration.parse("PT23H")
+    private var premieresStartsHour = Duration.parse("PT1H")
+    private var premieresEndsHour = Duration.parse("PT23H")
 
     fun hasRoom(roomConfigurer: RoomConfigurer.() -> Unit) = apply {
         rooms.add(RoomConfigurer().apply(roomConfigurer).build())
@@ -164,9 +208,13 @@ private class BasicSchedulerConfigurer(private val cinemaScheduleRepository: Cin
         this.seances.add(ScheduledSeanceConfigurer().apply(configurer).build())
     }
 
-    fun opensAtOclock(hour: Long) = apply { this.openingHour = Duration.ofHours(hour) }
+    fun opensAtOClock(hour: Long) = apply { this.openingHour = Duration.ofHours(hour) }
 
-    fun closesAtOclock(hour: Long) = apply { this.closingHour = Duration.ofHours(hour) }
+    fun closesAtOClock(hour: Long) = apply { this.closingHour = Duration.ofHours(hour) }
+
+    fun premieresStartsAtOClock(hour: Long) = apply { this.premieresStartsHour = Duration.ofHours(hour) }
+
+    fun premieresEndsAtOClock(hour: Long) = apply { this.premieresEndsHour = Duration.ofHours(hour) }
 
     fun configure() = BasicScheduler(
         cinemaScheduleRepository.apply {
@@ -174,7 +222,9 @@ private class BasicSchedulerConfigurer(private val cinemaScheduleRepository: Cin
                 rooms = Rooms(rooms.toList()),
                 seances = ScheduledSeances(seances.toList()),
                 openingHour = openingHour,
-                closingHour = closingHour
+                closingHour = closingHour,
+                premieresStartsAt = premieresStartsHour,
+                premieresEndsAt = premieresEndsHour
             )
         }
     )
@@ -218,7 +268,8 @@ private class FilmConfigurer {
 
     private var title = ""
     private var duration = Duration.ofHours(0)
-    private var type = Film.DisplayType.DISPLAY_2D
+    private var displayType = Film.DisplayType.DISPLAY_2D
+    private var filmType = Film.FilmType.BASIC
 
     fun title(title: String) = apply { this.title = title }
 
@@ -227,10 +278,13 @@ private class FilmConfigurer {
     fun build() = Film(
         title = title,
         duration = duration,
-        displayType = type
+        displayType = displayType,
+        filmType = filmType
     )
 }
 
-fun film2DOf(title: String, duration: Duration) = Film(title, duration, Film.DisplayType.DISPLAY_2D)
+fun film2DOf(title: String, duration: Duration) = Film(title, duration, Film.DisplayType.DISPLAY_2D, Film.FilmType.BASIC)
 
-fun film3DOf(title: String, duration: Duration) = Film(title, duration, Film.DisplayType.DISPLAY_3D)
+fun film3DOf(title: String, duration: Duration) = Film(title, duration, Film.DisplayType.DISPLAY_3D, Film.FilmType.BASIC)
+
+fun premiere2DOf(title: String, duration: Duration) = Film(title, duration, Film.DisplayType.DISPLAY_2D, Film.FilmType.PREMIERE)

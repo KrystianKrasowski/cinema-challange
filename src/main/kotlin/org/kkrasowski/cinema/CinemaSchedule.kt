@@ -7,7 +7,9 @@ import java.time.temporal.TemporalAmount
 class CinemaSchedule(private val rooms: Rooms,
                      private val seances: ScheduledSeances,
                      private val openingHour: TemporalAmount,
-                     private val closingHour: TemporalAmount) {
+                     private val closingHour: TemporalAmount,
+                     private val premieresStartsAt: TemporalAmount,
+                     private val premieresEndsAt: TemporalAmount) {
 
     fun schedule(film: Film, room: RoomName, startTime: LocalDateTime): Seance {
         return Seance.Scheduled(rooms.getByName(room), film, startTime)
@@ -16,8 +18,12 @@ class CinemaSchedule(private val rooms: Rooms,
     }
 
     private fun isValid(seance: Seance.Scheduled) = seances.haveFreeSlotFor(seance)
-            && seance.startsAfter(openingHour)
-            && seance.endsBefore(closingHour)
+            && seance.isWithinValidHours()
+
+    private fun Seance.Scheduled.isWithinValidHours() = when (filmType) {
+        Film.FilmType.BASIC -> startsAfter(openingHour) && endsBefore(closingHour)
+        Film.FilmType.PREMIERE -> startsAfter(premieresStartsAt) && endsBefore(premieresEndsAt)
+    }
 }
 
 data class Rooms(private val rooms: List<Room>) {
