@@ -7,6 +7,9 @@ import org.kkrasowski.cinema.assertions.assertThat
 import java.time.Duration
 import java.time.LocalDateTime
 
+// TODO: all startsAt as string change to LocalDateTime by JUnit5 converters
+// TODO: extract configurers to separate package, maybe domain?
+// TODO: add DateTimeSlotTest
 class BasicSchedulerTest {
 
     private val room1: RoomConfigurer.() -> Unit = {
@@ -177,9 +180,33 @@ class BasicSchedulerTest {
             .requires3DGlasses()
     }
 
-    // Isn't it the same as occupation?
-    fun `the one where room is unavailable for given time`() {
+    @ParameterizedTest
+    @ValueSource(strings = [
+        "2022-10-21T11:00:01",
+        "2022-10-21T14:00:00",
+        "2022-10-21T14:30:00",
+        "2022-10-21T14:59:59",
+    ])
+    fun `the one where room is unavailable for given time`(startsAt: String) {
+        // given
+        val basicScheduler = BasicSchedulerConfigurer(cinemaScheduleRepository)
+            .hasRoom {
+                name("Room 1")
+                needs1HourOfMaintenanceTime()
+                isUnavailable {
+                    from("2022-10-21T14:00:00")
+                    to("2022-10-21T15:00:00")
+                }
+            }
+            .configure()
 
+        // when
+        val film = film2DOf("Cinderella", Duration.ofHours(2))
+        val room = RoomName("Room 1")
+        val seance = basicScheduler.schedule(film, room, LocalDateTime.parse(startsAt))
+
+        // then
+        assertThat(seance).isDeclined()
     }
 
     fun `the one where given room does not exist`() {
@@ -187,6 +214,10 @@ class BasicSchedulerTest {
     }
 
     fun `the one where given start time is in the past`() {
+
+    }
+
+    fun `the one where given film does not exists in the catalogue`() {
 
     }
 }
@@ -234,14 +265,20 @@ private class RoomConfigurer {
 
     private var name = ""
     private var maintenanceTime = Duration.ofHours(0)
+    private var unavailabilitySlots = mutableListOf<DateTimeSlot>()
 
     fun name(name: String) = apply { this.name = name }
 
     fun needs1HourOfMaintenanceTime() = apply { this.maintenanceTime = Duration.parse("PT1H") }
 
+    fun isUnavailable(block: DateTimeSlotConfigurer.() -> Unit) = apply {
+        this.unavailabilitySlots.add(DateTimeSlotConfigurer().apply(block).build())
+    }
+
     fun build(): Room = Room(
         name = RoomName(name),
-        maintenanceTime = maintenanceTime
+        maintenanceTime = maintenanceTime,
+        unavailableTimes = unavailabilitySlots.toList()
     )
 }
 
@@ -281,6 +318,18 @@ private class FilmConfigurer {
         displayType = displayType,
         filmType = filmType
     )
+}
+
+private class DateTimeSlotConfigurer {
+
+    private var start = LocalDateTime.parse("1970-01-01T00:00:00")
+    private var end = LocalDateTime.parse("1970-01-01T00:00:00")
+
+    fun from(dateTime: String) = apply { this.start = LocalDateTime.parse(dateTime) }
+
+    fun to(dateTime: String) = apply { this.end = LocalDateTime.parse(dateTime) }
+
+    fun build() = DateTimeSlot(start, end)
 }
 
 fun film2DOf(title: String, duration: Duration) = Film(title, duration, Film.DisplayType.DISPLAY_2D, Film.FilmType.BASIC)

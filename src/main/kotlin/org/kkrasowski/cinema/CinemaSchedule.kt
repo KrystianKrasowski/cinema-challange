@@ -11,9 +11,10 @@ class CinemaSchedule(private val rooms: Rooms,
                      private val premieresStartsAt: TemporalAmount,
                      private val premieresEndsAt: TemporalAmount) {
 
-    fun schedule(film: Film, room: RoomName, startTime: LocalDateTime): Seance {
-        return Seance.Scheduled(rooms.getByName(room), film, startTime)
-            .takeIf { isValid(it) }
+    fun schedule(film: Film, roomName: RoomName, startTime: LocalDateTime): Seance {
+        val room = rooms.getByName(roomName)
+        return Seance.Scheduled(room, film, startTime)
+            .takeIf { isValid(it) && room.isAvailableFor(it) }
             ?: Seance.Declined
     }
 
@@ -36,4 +37,8 @@ data class ScheduledSeances(private val seances: List<Seance.Scheduled>) {
     fun haveFreeSlotFor(seance: Seance.Scheduled): Boolean = seances.none { it.roomName == seance.roomName && it.clashesWith(seance) }
 }
 
-data class Room(val name: RoomName, val maintenanceTime: Duration)
+data class Room(val name: RoomName, val maintenanceTime: Duration, val unavailableTimes: List<DateTimeSlot>) {
+
+    fun isAvailableFor(seance: Seance.Scheduled): Boolean = unavailableTimes
+        .none { it.clashesWith(seance.dateTimeSlot) }
+}
