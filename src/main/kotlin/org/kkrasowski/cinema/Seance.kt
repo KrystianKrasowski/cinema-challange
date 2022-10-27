@@ -42,9 +42,11 @@ sealed class Seance {
         private val today
             get() = startsAt.truncatedTo(ChronoUnit.DAYS)
 
+        private val dateTimeSlot: DateTimeSlot
+            get() = DateTimeSlot(startsAt, maintenanceEndsAt)
+
         fun clashesWith(seance: Scheduled): Boolean {
-            return seance.maintenanceEndsAt >= this.startsAt && seance.maintenanceEndsAt <= this.maintenanceEndsAt
-                    || seance.startsAt >= this.startsAt && seance.startsAt <= this.maintenanceEndsAt
+            return seance.dateTimeSlot.clashesWith(dateTimeSlot)
         }
 
         fun startsAfter(time: TemporalAmount): Boolean = today
@@ -57,4 +59,11 @@ sealed class Seance {
     }
 
     object Declined : Seance()
+}
+
+data class DateTimeSlot(val start: LocalDateTime, val end: LocalDateTime) {
+
+    fun clashesWith(other: DateTimeSlot): Boolean {
+        return other.end in start..end || other.start in start..end
+    }
 }
