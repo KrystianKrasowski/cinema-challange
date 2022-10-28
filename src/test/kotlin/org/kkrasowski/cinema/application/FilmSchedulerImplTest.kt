@@ -6,9 +6,11 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.kkrasowski.cinema.api.*
 import org.kkrasowski.cinema.domain.*
+import org.kkrasowski.cinema.spi.ConfigurationStub
 import org.kkrasowski.cinema.spi.FilmsCatalogueStub
 import org.kkrasowski.cinema.spi.RoomsRepositoryStub
 import org.kkrasowski.cinema.spi.ScheduleRepositoryStub
+import java.time.Duration
 import java.time.LocalDateTime
 
 // TODO: Create custom assertions so that tests are more readible
@@ -17,9 +19,15 @@ class FilmSchedulerImplTest {
     private val filmCatalogue = FilmsCatalogueStub()
     private val scheduleRepository = ScheduleRepositoryStub()
     private val roomsRepository = RoomsRepositoryStub()
+    private val configuration = ConfigurationStub(
+        openingHour = Duration.ofHours(8),
+        closingHour = Duration.ofHours(22),
+        premieresStartHour = Duration.ofHours(17),
+        premieresEndHour = Duration.ofHours(21)
+    )
 
     private val filmScheduler
-        get() = FilmSchedulerImpl(filmCatalogue, scheduleRepository, roomsRepository)
+        get() = FilmSchedulerImpl(filmCatalogue, scheduleRepository, roomsRepository, configuration)
 
     @Test
     fun `seance is scheduled`() {
