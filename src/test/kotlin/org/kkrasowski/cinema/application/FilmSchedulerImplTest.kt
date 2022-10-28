@@ -37,11 +37,11 @@ class FilmSchedulerImplTest {
         scheduleRepository.hasDefinedRoom(roomOf("Room 1", "PT1H"))
 
         // when
-        val seance = filmScheduler.schedule("Cinderella", "Room 1", "2022-10-21T09:00:00")
+        val result = filmScheduler.schedule("Cinderella", "Room 1", "2022-10-21T09:00:00")
 
         // then
         //TODO: Consider returning sealed class subtype with scheduled slots (maybe other test)
-        assertThat(seance).isInstanceOf(Seance.Scheduled::class.java)
+        assertThat(result).isInstanceOf(ScheduleResult.Success::class.java)
         assertThat(scheduleRepository.getOccupationsForRoom("Room 1"))
             .contains(roomOccupationOf("Room 1", "Cinderella", dateTimeSlotOf("2022-10-21T09:00:00", "2022-10-21T11:00:00")))
             .contains(roomOccupationOf("Room 1", "Maintenance", dateTimeSlotOf("2022-10-21T11:00:00", "2022-10-21T12:00:00")))
@@ -67,10 +67,10 @@ class FilmSchedulerImplTest {
             .containsOccupation(roomOccupationOf("Room 1", "Out of order", dateTimeSlotOf("2022-10-21T15:00:00", "2022-10-21T22:00:00")))
 
         // when
-        val seance = filmScheduler.schedule("Cinderella", "Room 1", startsAt)
+        val result = filmScheduler.schedule("Cinderella", "Room 1", startsAt)
 
         // then
-        assertThat(seance).isInstanceOf(Seance.Declined::class.java)
+        assertThat(result).isInstanceOf(ScheduleResult.Failure::class.java)
     }
 
     @ParameterizedTest
@@ -97,10 +97,10 @@ class FilmSchedulerImplTest {
         scheduleRepository.hasDefinedRoom(roomOf("Room 1", "PT1H"))
 
         // when
-        val seance = filmScheduler.schedule("Cinderella", "Room 1", startsAt)
+        val result = filmScheduler.schedule("Cinderella", "Room 1", startsAt)
 
         // then
-        assertThat(seance).isInstanceOf(Seance.Declined::class.java)
+        assertThat(result).isInstanceOf(ScheduleResult.Failure::class.java)
     }
 
     @ParameterizedTest
@@ -136,10 +136,10 @@ class FilmSchedulerImplTest {
         scheduleRepository.hasDefinedRoom(roomOf("Room 1", "PT1H"))
 
         // when
-        val seance = filmScheduler.schedule("Cinderella 3", "Room 1", startsAt)
+        val result = filmScheduler.schedule("Cinderella 3", "Room 1", startsAt)
 
         // then
-        assertThat(seance).isInstanceOf(Seance.Declined::class.java)
+        assertThat(result).isInstanceOf(ScheduleResult.Failure::class.java)
     }
 
     @Test

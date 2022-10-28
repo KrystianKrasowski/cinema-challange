@@ -9,16 +9,15 @@ import java.time.LocalDateTime
 class FilmSchedulerImpl(private val films: FilmsCatalogue,
                         private val scheduleRepository: ScheduleRepository) : FilmScheduler {
 
-    override fun schedule(filmTitle: FilmTitle, roomName: RoomName, startsAt: LocalDateTime): Seance {
+    override fun schedule(filmTitle: FilmTitle, roomName: RoomName, startsAt: LocalDateTime): ScheduleResult {
         val film = films.find(filmTitle)
         val cinemaSchedule = scheduleRepository.getSchedule()
         val schedule = cinemaSchedule.schedule(film, roomName, startsAt)
 
-        return if (schedule is ScheduleResult.Success) {
+        if (schedule is ScheduleResult.Success) {
             scheduleRepository.save(schedule.version, schedule.occupations)
-            Seance.Scheduled
-        } else {
-            Seance.Declined
         }
+
+        return schedule
     }
 }
