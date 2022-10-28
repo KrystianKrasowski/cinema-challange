@@ -16,5 +16,3 @@ data class Film(val title: FilmTitle, val time: Duration, val type: Type, val di
 }
 
 data class FilmTitle(val value: String)
-
-fun String.toFilmTitle() = FilmTitle(this)

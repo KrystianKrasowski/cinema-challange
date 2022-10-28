@@ -42,3 +42,6 @@ fun dateTimeSlotOf(start: String, end: String) = dateTimeSlotOf(
 )
 
 fun ScheduleResult.asSuccess() = this as ScheduleResult.Success
+fun String.toRoomName() = RoomName(this)
+fun String.toLabel() = Label(this)
+fun String.toFilmTitle() = FilmTitle(this)

@@ -1,7 +1,6 @@
 package org.kkrasowski.cinema.domain
 
 import java.time.Duration
-import java.time.LocalDateTime
 import java.time.temporal.TemporalAmount
 
 data class Room(val name: RoomName, val maintenanceTime: Duration)
@@ -9,9 +8,6 @@ data class Room(val name: RoomName, val maintenanceTime: Duration)
 data class RoomName(val value: String)
 
 data class RoomOccupation(val roomName: RoomName, val label: Label, private val slot: DateTimeSlot, private val attributes: Collection<Attribute>) {
-
-    val endsAt: LocalDateTime
-        get() = slot.end
 
     fun clashesWith(other: RoomOccupation): Boolean = slot.clashesWith(other.slot)
 
@@ -26,5 +22,3 @@ data class RoomOccupation(val roomName: RoomName, val label: Label, private val 
         PREMIERE
     }
 }
-
-fun String.toRoomName() = RoomName(this)
