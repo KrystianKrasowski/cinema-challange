@@ -5,11 +5,16 @@ import org.kkrasowski.cinema.domain.*
 import org.kkrasowski.cinema.spi.FilmsCatalogue
 import org.kkrasowski.cinema.spi.RoomsRepository
 import org.kkrasowski.cinema.spi.ScheduleRepository
+import java.time.Duration
 import java.time.LocalDateTime
 
 class FilmSchedulerImpl(private val films: FilmsCatalogue,
                         private val schedules: ScheduleRepository,
                         private val rooms: RoomsRepository) : FilmScheduler {
+
+    // TODO: Could be in some configuration SPI
+    private val openingHour = Duration.parse("PT8H")
+    private val closingHour = Duration.parse("PT22H")
 
     override fun schedule(title: FilmTitle, roomName: RoomName, startsAt: LocalDateTime): Seance {
         val film = films.find(title)
@@ -19,7 +24,7 @@ class FilmSchedulerImpl(private val films: FilmsCatalogue,
         val filmSlot = DateTimeSlot(title.value, startsAt, filmEndTime)
         val maintenanceSlot = DateTimeSlot("Maintenance", filmEndTime, maintenanceEndTime)
 
-        return if (areValid(room, filmSlot, maintenanceSlot)) {
+        return if (filmSlot.isValidFor(room) && maintenanceSlot.isValidFor(room)) {
             schedules.save(listOf(
                 RoomOccupation(roomName, filmSlot),
                 RoomOccupation(roomName, maintenanceSlot)
@@ -31,7 +36,7 @@ class FilmSchedulerImpl(private val films: FilmsCatalogue,
         }
     }
 
-    private fun areValid(room: Room, filmSlot: DateTimeSlot, maintenanceSlot: DateTimeSlot): Boolean {
-        return room.hasFreeSlotFor(filmSlot) && room.hasFreeSlotFor(maintenanceSlot)
-    }
+    private fun DateTimeSlot.isValidFor(room: Room) = room.hasFreeSlotFor(this)
+            && startsAfterOrExactlyAt(openingHour)
+            && endsBeforeOrExactlyAt(closingHour)
 }

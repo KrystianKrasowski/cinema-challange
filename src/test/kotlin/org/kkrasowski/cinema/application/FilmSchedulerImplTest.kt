@@ -55,8 +55,7 @@ class FilmSchedulerImplTest {
             dateTimeSlotOf("Shrek", "2022-10-21T11:00:00", "2022-10-21T13:30:00"),
             dateTimeSlotOf("Maintenance", "2022-10-21T13:30:00", "2022-10-21T14:30:00"),
             dateTimeSlotOf("Unavailable", "2022-10-21T15:00:00", "2022-10-21T22:00:00")
-        ))
-        )
+        )))
 
         // when
         val seance = filmScheduler.schedule("Cinderella", "Room 1", startsAt)
@@ -65,7 +64,35 @@ class FilmSchedulerImplTest {
         assertThat(seance).isEqualTo(Seance.DECLINED)
     }
 
-    fun `the seance is out of cinema's working hours`() {}
+    @ParameterizedTest
+    @ValueSource(strings = [
+        "2022-10-21T00:00:00",
+        "2022-10-21T01:00:00",
+        "2022-10-21T02:00:00",
+        "2022-10-21T03:00:00",
+        "2022-10-21T04:00:00",
+        "2022-10-21T05:00:00",
+        "2022-10-21T06:00:00",
+        "2022-10-21T07:00:00",
+        "2022-10-21T07:59:59",
+        "2022-10-21T19:00:01",
+        "2022-10-21T20:00:00",
+        "2022-10-21T21:00:00",
+        "2022-10-21T22:00:00",
+        "2022-10-21T23:00:00",
+        "2022-10-21T23:59:59",
+    ])
+    fun `the seance is out of cinema's working hours`(startsAt: String) {
+        // given
+        filmCatalogue.containsFilm(filmOf("Cinderella", "PT2H"))
+        roomsRepository.containsRoom(roomOf("Room 1", "PT1H"))
+
+        // when
+        val seance = filmScheduler.schedule("Cinderella", "Room 1", startsAt)
+
+        // then
+        assertThat(seance).isEqualTo(Seance.DECLINED)
+    }
 
     fun `the premiere seance is out of the premieres hours`() {}
 
