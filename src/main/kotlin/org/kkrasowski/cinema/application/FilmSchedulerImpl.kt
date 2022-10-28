@@ -18,36 +18,44 @@ class FilmSchedulerImpl(private val films: FilmsCatalogue,
     private val premieresStartHour = Duration.parse("PT17H")
     private val premieresEndHour = Duration.parse("PT21H")
 
-    override fun schedule(title: FilmTitle, roomName: RoomName, startsAt: LocalDateTime): Seance {
-        val film = films.find(title)
-        val room = rooms.getByName(roomName)
-        val filmEndTime = startsAt + film.time
-        val maintenanceEndTime = filmEndTime + room.maintenanceTime
-        val filmSlot = DateTimeSlot(startsAt, filmEndTime)
-        val maintenanceSlot = DateTimeSlot(filmEndTime, maintenanceEndTime)
-        val occupations = schedules.getScheduleFor(roomName)
+    override fun schedule(filmTitle: FilmTitle, roomName: RoomName, startsAt: LocalDateTime): Seance {
+        val scheduledFilm = createFilmOccupation(roomName, films.find(filmTitle), startsAt)
+        val scheduledMaintenance = createMaintenanceOccupation(rooms.getByName(roomName), scheduledFilm.endsAt)
 
-        return if (occupations.hasFreeSlotFor(filmSlot) && occupations.hasFreeSlotFor(maintenanceSlot) && filmSlot.isValidFor(film.type) && maintenanceSlot.endsBeforeOrExactlyAt(closingHour)) {
+        val occupations = schedules.getScheduleFor(roomName)
+        return if (occupations.hasFreeSlotFor(scheduledFilm) && occupations.hasFreeSlotFor(scheduledMaintenance) && scheduledFilm.isWithinValidHours() && scheduledMaintenance.endsBeforeOrExactlyAt(closingHour)) {
             schedules.save(listOf(
-                RoomOccupation(roomName, labelOf(film), filmSlot, createAttributesFor(film)),
-                RoomOccupation(roomName, labelOfMaintenance(), maintenanceSlot, emptyList())
+                scheduledFilm,
+                scheduledMaintenance
             ))
 
-            Seance.SCHEDULED
+            Seance.Scheduled
         } else {
-            Seance.DECLINED
+            Seance.Declined
         }
     }
 
-    private fun Collection<RoomOccupation>.hasFreeSlotFor(slot: DateTimeSlot) = map { it.slot }
-        .none { it.clashesWith(slot) }
+    private fun createFilmOccupation(roomName: RoomName, film: Film, startsAt: LocalDateTime): RoomOccupation {
+        return RoomOccupation(roomName, labelOf(film), dateTimeSlotOf(startsAt, startsAt + film.time), listOfNotNull(
+            create3DGlassesRequiredAttribute(film.display),
+            createPremiereAttribute(film.type)
+        ))
+    }
 
-    private fun createAttributesFor(film: Film) = listOf(RoomOccupation.Attribute.THE_3D_GLASSES_REQUIRED)
-        .takeIf { film.display == Film.Display.DISPLAY_3D }
-        ?: emptyList()
+    private fun create3DGlassesRequiredAttribute(display: Film.Display) = RoomOccupation.Attribute.THE_3D_GLASSES_REQUIRED
+        .takeIf { display == Film.Display.DISPLAY_3D }
 
-    private fun DateTimeSlot.isValidFor(type: Film.Type) = when(type) {
-        Film.Type.REGULAR -> startsAfterOrExactlyAt(openingHour) && endsBeforeOrExactlyAt(closingHour)
-        Film.Type.PREMIERE -> startsAfterOrExactlyAt(premieresStartHour) && endsBeforeOrExactlyAt(premieresEndHour)
+    private fun createPremiereAttribute(type: Film.Type) = RoomOccupation.Attribute.PREMIERE
+        .takeIf { type == Film.Type.PREMIERE }
+
+    private fun createMaintenanceOccupation(room: Room, startsAt: LocalDateTime): RoomOccupation {
+        return RoomOccupation(room.name, labelOfMaintenance(), dateTimeSlotOf(startsAt, startsAt + room.maintenanceTime), emptyList())
+    }
+
+    private fun Collection<RoomOccupation>.hasFreeSlotFor(occupation: RoomOccupation) = none { it.clashesWith(occupation) }
+
+    private fun RoomOccupation.isWithinValidHours() = when {
+        hasAttribute(RoomOccupation.Attribute.PREMIERE) -> startsAfterOrExactlyAt(premieresStartHour) && endsBeforeOrExactlyAt(premieresEndHour)
+        else -> startsAfterOrExactlyAt(openingHour) && endsBeforeOrExactlyAt(closingHour)
     }
 }

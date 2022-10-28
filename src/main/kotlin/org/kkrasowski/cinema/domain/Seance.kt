@@ -1,6 +1,6 @@
 package org.kkrasowski.cinema.domain
 
-enum class Seance {
-    SCHEDULED,
-    DECLINED
+sealed class Seance {
+    object Scheduled : Seance()
+    object Declined : Seance()
 }

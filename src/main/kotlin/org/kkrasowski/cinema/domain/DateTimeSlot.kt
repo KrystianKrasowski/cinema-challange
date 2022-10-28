@@ -1,8 +1,8 @@
 package org.kkrasowski.cinema.domain
 
-import java.time.Duration
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
+import java.time.temporal.TemporalAmount
 
 data class DateTimeSlot(val start: LocalDateTime, val end: LocalDateTime) {
 
@@ -10,9 +10,9 @@ data class DateTimeSlot(val start: LocalDateTime, val end: LocalDateTime) {
 
     fun clashesWith(other: DateTimeSlot): Boolean = other.start in start..end || other.end in start..end
 
-    fun startsAfterOrExactlyAt(time: Duration): Boolean = start >= date + time
+    fun startsAfterOrExactlyAt(time: TemporalAmount): Boolean = start >= date + time
 
-    fun endsBeforeOrExactlyAt(time: Duration): Boolean = end <= date + time
+    fun endsBeforeOrExactlyAt(time: TemporalAmount): Boolean = end <= date + time
 }
 
 fun dateTimeSlotOf(start: LocalDateTime, end: LocalDateTime) = DateTimeSlot(start, end)

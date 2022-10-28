@@ -11,6 +11,7 @@ import org.kkrasowski.cinema.spi.RoomsRepositoryStub
 import org.kkrasowski.cinema.spi.ScheduleRepositoryStub
 import java.time.LocalDateTime
 
+// TODO: Create custom assertions so that tests are more readible
 class FilmSchedulerImplTest {
 
     private val filmCatalogue = FilmsCatalogueStub()
@@ -31,7 +32,7 @@ class FilmSchedulerImplTest {
 
         // then
         //TODO: Consider returning sealed class subtype with scheduled slots (maybe other test)
-        assertThat(seance).isEqualTo(Seance.SCHEDULED)
+        assertThat(seance).isInstanceOf(Seance.Scheduled::class.java)
         assertThat(scheduleRepository.getOccupationsForRoom("Room 1"))
             .contains(roomOccupationOf("Room 1", "Cinderella", dateTimeSlotOf("2022-10-21T09:00:00", "2022-10-21T11:00:00")))
             .contains(roomOccupationOf("Room 1", "Maintenance", dateTimeSlotOf("2022-10-21T11:00:00", "2022-10-21T12:00:00")))
@@ -60,7 +61,7 @@ class FilmSchedulerImplTest {
         val seance = filmScheduler.schedule("Cinderella", "Room 1", startsAt)
 
         // then
-        assertThat(seance).isEqualTo(Seance.DECLINED)
+        assertThat(seance).isInstanceOf(Seance.Declined::class.java)
     }
 
     @ParameterizedTest
@@ -90,7 +91,7 @@ class FilmSchedulerImplTest {
         val seance = filmScheduler.schedule("Cinderella", "Room 1", startsAt)
 
         // then
-        assertThat(seance).isEqualTo(Seance.DECLINED)
+        assertThat(seance).isInstanceOf(Seance.Declined::class.java)
     }
 
     @ParameterizedTest
@@ -129,7 +130,7 @@ class FilmSchedulerImplTest {
         val seance = filmScheduler.schedule("Cinderella 3", "Room 1", startsAt)
 
         // then
-        assertThat(seance).isEqualTo(Seance.DECLINED)
+        assertThat(seance).isInstanceOf(Seance.Declined::class.java)
     }
 
     @Test
@@ -153,7 +154,7 @@ class FilmSchedulerImplTest {
     fun `chosen room does not appear in the repository`() {}
 
     private fun FilmScheduler.schedule(title: String, roomName: String, startsAt: String) = schedule(
-        title = title.toFilmTitle(),
+        filmTitle = title.toFilmTitle(),
         roomName = roomName.toRoomName(),
         startsAt = LocalDateTime.parse(startsAt)
     )
