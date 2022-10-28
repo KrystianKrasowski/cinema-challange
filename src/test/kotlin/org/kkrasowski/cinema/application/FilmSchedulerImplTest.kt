@@ -5,14 +5,14 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import org.kkrasowski.cinema.api.*
+import org.kkrasowski.cinema.api.FilmScheduler
+import org.kkrasowski.cinema.assertions.assertThat
 import org.kkrasowski.cinema.domain.*
 import org.kkrasowski.cinema.spi.FilmsCatalogueStub
 import org.kkrasowski.cinema.spi.ScheduleRepositoryStub
 import java.time.Duration
 import java.time.LocalDateTime
 
-// TODO: Create custom assertions so that tests are more readible
 class FilmSchedulerImplTest {
 
     private val filmCatalogue = FilmsCatalogueStub()
@@ -40,11 +40,13 @@ class FilmSchedulerImplTest {
         val result = filmScheduler.schedule("Cinderella", "Room 1", "2022-10-21T09:00:00")
 
         // then
-        //TODO: Consider returning sealed class subtype with scheduled slots (maybe other test)
-        assertThat(result).isInstanceOf(ScheduleResult.Success::class.java)
-        assertThat(scheduleRepository.getOccupationsForRoom("Room 1"))
+        assertThat(result)
+            .isSuccess()
             .contains(roomOccupationOf("Room 1", "Cinderella", dateTimeSlotOf("2022-10-21T09:00:00", "2022-10-21T11:00:00")))
             .contains(roomOccupationOf("Room 1", "Maintenance", dateTimeSlotOf("2022-10-21T11:00:00", "2022-10-21T12:00:00")))
+
+        assertThat(scheduleRepository.getOccupations())
+            .containsAll(result.asSuccess().occupations)
     }
 
     @ParameterizedTest
@@ -70,7 +72,7 @@ class FilmSchedulerImplTest {
         val result = filmScheduler.schedule("Cinderella", "Room 1", startsAt)
 
         // then
-        assertThat(result).isInstanceOf(ScheduleResult.Failure::class.java)
+        assertThat(result).isFailure()
     }
 
     @ParameterizedTest
@@ -100,7 +102,7 @@ class FilmSchedulerImplTest {
         val result = filmScheduler.schedule("Cinderella", "Room 1", startsAt)
 
         // then
-        assertThat(result).isInstanceOf(ScheduleResult.Failure::class.java)
+        assertThat(result).isFailure()
     }
 
     @ParameterizedTest
@@ -139,7 +141,7 @@ class FilmSchedulerImplTest {
         val result = filmScheduler.schedule("Cinderella 3", "Room 1", startsAt)
 
         // then
-        assertThat(result).isInstanceOf(ScheduleResult.Failure::class.java)
+        assertThat(result).isFailure()
     }
 
     @Test
@@ -152,7 +154,7 @@ class FilmSchedulerImplTest {
         filmScheduler.schedule("Avatar", "Room 1", "2022-10-21T09:00:00")
 
         // then
-        assertThat(scheduleRepository.getOccupationsForRoom("Room 1"))
+        assertThat(scheduleRepository.getOccupations())
             .contains(roomOccupationOf("Room 1", "Avatar", dateTimeSlotOf("2022-10-21T09:00:00", "2022-10-21T11:00:00"), listOf(
                 RoomOccupation.Attribute.THE_3D_GLASSES_REQUIRED
             )))

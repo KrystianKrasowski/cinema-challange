@@ -40,3 +40,5 @@ fun dateTimeSlotOf(start: String, end: String) = dateTimeSlotOf(
     start = LocalDateTime.parse(start),
     end = LocalDateTime.parse(end)
 )
+
+fun ScheduleResult.asSuccess() = this as ScheduleResult.Success

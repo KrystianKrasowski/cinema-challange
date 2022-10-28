@@ -22,15 +22,11 @@ class ScheduleRepositoryStub : ScheduleRepository {
         return CinemaSchedule(version, occupations.toList(), rooms.toList(), configuration)
     }
 
-    override fun getOccupations(): Collection<RoomOccupation> = occupations.toList()
-
     override fun save(version: Long, occupations: Collection<RoomOccupation>) {
         occupations.forEach { this.occupations.add(it) }
     }
 
-    fun getOccupationsForRoom(name: String): List<RoomOccupation> = occupations
-        .filter { it.roomName == name.toRoomName() }
-        .toList()
+    fun getOccupations(): Collection<RoomOccupation> = occupations.toList()
 
     fun openingHourIs(hour: TemporalAmount) = apply { this.openingHour = hour }
 
