@@ -1,56 +1,63 @@
 package org.kkrasowski.cinema.domain
 
+import org.kkrasowski.cinema.domain.RoomOccupation.Attribute
 import java.time.LocalDateTime
 
 typealias RoomOccupations = Collection<RoomOccupation>
 typealias Rooms = Collection<Room>
 
 class CinemaSchedule(private val version: Long,
-                     private val occupations: RoomOccupations,
+                     private val scheduledOccupations: RoomOccupations,
                      private val rooms: Rooms,
-                     private val configuration: Configuration
-) {
+                     private val configuration: Configuration) {
 
     fun schedule(film: Film, roomName: RoomName, startsAt: LocalDateTime): ScheduleResult {
-        val filmOccupation = createFilmOccupation(roomName, film, startsAt)
-        val maintenanceOccupation = createMaintenanceOccupation(rooms.getByName(roomName), filmOccupation.endsAt)
-
-        return if (filmOccupation.isValid() && maintenanceOccupation.isValid()) {
-            ScheduleResult.Success(version, listOf(filmOccupation, maintenanceOccupation))
-        } else {
-            ScheduleResult.Failure
-        }
+        return createSuccess(rooms.getByName(roomName), film, startsAt)
+            .takeIf { it.isValid() }
+            ?: ScheduleResult.Failure
     }
 
-    private fun createFilmOccupation(roomName: RoomName, film: Film, startsAt: LocalDateTime): RoomOccupation {
-        return RoomOccupation(roomName, labelOf(film), dateTimeSlotOf(startsAt, startsAt + film.time), listOfNotNull(
-            create3DGlassesRequiredAttribute(film.display),
-            createPremiereAttribute(film.type)
-        ))
-    }
+    private fun createSuccess(room: Room, film: Film, startsAt: LocalDateTime) = ScheduleResult.Success(
+        version = version + 1,
+        occupations = listOf(
+            RoomOccupation(
+                roomName = room.name,
+                label = labelOf(film),
+                slot = dateTimeSlotOf(
+                    start = startsAt,
+                    end = startsAt + film.time
+                ),
+                attributes = listOfNotNull(
+                    create3DGlassesRequiredAttribute(film.display),
+                    createPremiereAttribute(film.type)
+                )
+            ),
+            RoomOccupation(
+                roomName = room.name,
+                label = labelOfMaintenance(),
+                slot = dateTimeSlotOf(
+                    start = startsAt + film.time,
+                    end = startsAt + film.time + room.maintenanceTime
+                ),
+                attributes = emptyList()
+            )
+        )
+    )
 
-    private fun create3DGlassesRequiredAttribute(display: Film.Display) = RoomOccupation.Attribute.THE_3D_GLASSES_REQUIRED
+    private fun create3DGlassesRequiredAttribute(display: Film.Display) = Attribute.THE_3D_GLASSES_REQUIRED
         .takeIf { display == Film.Display.DISPLAY_3D }
 
-    private fun createPremiereAttribute(type: Film.Type) = RoomOccupation.Attribute.PREMIERE
+    private fun createPremiereAttribute(type: Film.Type) = Attribute.PREMIERE
         .takeIf { type == Film.Type.PREMIERE }
 
-    private fun createMaintenanceOccupation(room: Room, startsAt: LocalDateTime): RoomOccupation {
-        return RoomOccupation(room.name, labelOfMaintenance(), dateTimeSlotOf(startsAt, startsAt + room.maintenanceTime), emptyList())
-    }
+    private fun ScheduleResult.Success.isValid() = occupations.all { it.isValid() }
 
-    private fun RoomOccupation.isValid() = occupations.noneClashesWith(this) && isWithinValidHours()
+    private fun RoomOccupation.isValid() = scheduledOccupations.noneClashesWith(this) && isWithinValidHours()
 
     private fun RoomOccupation.isWithinValidHours() = when {
-        hasAttribute(RoomOccupation.Attribute.PREMIERE) -> startsAfterOrExactlyAt(configuration.premieresStartHour) && endsBeforeOrExactlyAt(configuration.premieresEndHour)
-        else -> startsAfterOrExactlyAt(configuration.openingHour) && endsBeforeOrExactlyAt(configuration.closingHour)
+        hasAttribute(Attribute.PREMIERE) -> startsAfterOrAt(configuration.premieresStartHour) && endsBeforeOrAt(configuration.premieresEndHour)
+        else -> startsAfterOrAt(configuration.openingHour) && endsBeforeOrAt(configuration.closingHour)
     }
-}
-
-sealed class ScheduleResult {
-
-    data class Success(val version: Long, val occupations: Collection<RoomOccupation>) : ScheduleResult()
-    object Failure : ScheduleResult()
 }
 
 fun Rooms.getByName(name: RoomName) = first { it.name == name }

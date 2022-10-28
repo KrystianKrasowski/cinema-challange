@@ -10,14 +10,9 @@ class FilmSchedulerImpl(private val films: FilmsCatalogue,
                         private val scheduleRepository: ScheduleRepository) : FilmScheduler {
 
     override fun schedule(filmTitle: FilmTitle, roomName: RoomName, startsAt: LocalDateTime): ScheduleResult {
-        val film = films.find(filmTitle)
-        val cinemaSchedule = scheduleRepository.getSchedule()
-        val schedule = cinemaSchedule.schedule(film, roomName, startsAt)
-
-        if (schedule is ScheduleResult.Success) {
-            scheduleRepository.save(schedule.version, schedule.occupations)
-        }
-
-        return schedule
+        return scheduleRepository
+            .getSchedule()
+            .schedule(films.find(filmTitle), roomName, startsAt)
+            .onSuccess { scheduleRepository.save(it.version, it.occupations) }
     }
 }

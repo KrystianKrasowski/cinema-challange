@@ -15,9 +15,9 @@ data class RoomOccupation(val roomName: RoomName, val label: Label, private val 
 
     fun clashesWith(other: RoomOccupation): Boolean = slot.clashesWith(other.slot)
 
-    fun startsAfterOrExactlyAt(time: TemporalAmount): Boolean = slot.startsAfterOrExactlyAt(time)
+    fun startsAfterOrAt(time: TemporalAmount): Boolean = slot.startsAfterOrExactlyAt(time)
 
-    fun endsBeforeOrExactlyAt(time: TemporalAmount): Boolean = slot.endsBeforeOrExactlyAt(time)
+    fun endsBeforeOrAt(time: TemporalAmount): Boolean = slot.endsBeforeOrExactlyAt(time)
 
     fun hasAttribute(attribute: Attribute): Boolean = attributes.contains(attribute)
 
