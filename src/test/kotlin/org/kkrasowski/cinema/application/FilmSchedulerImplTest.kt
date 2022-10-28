@@ -1,14 +1,13 @@
 package org.kkrasowski.cinema.application
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.kkrasowski.cinema.api.*
 import org.kkrasowski.cinema.domain.*
-import org.kkrasowski.cinema.spi.ConfigurationStub
 import org.kkrasowski.cinema.spi.FilmsCatalogueStub
-import org.kkrasowski.cinema.spi.RoomsRepositoryStub
 import org.kkrasowski.cinema.spi.ScheduleRepositoryStub
 import java.time.Duration
 import java.time.LocalDateTime
@@ -18,22 +17,24 @@ class FilmSchedulerImplTest {
 
     private val filmCatalogue = FilmsCatalogueStub()
     private val scheduleRepository = ScheduleRepositoryStub()
-    private val roomsRepository = RoomsRepositoryStub()
-    private val configuration = ConfigurationStub(
-        openingHour = Duration.ofHours(8),
-        closingHour = Duration.ofHours(22),
-        premieresStartHour = Duration.ofHours(17),
-        premieresEndHour = Duration.ofHours(21)
-    )
 
     private val filmScheduler
-        get() = FilmSchedulerImpl(filmCatalogue, scheduleRepository, roomsRepository, configuration)
+        get() = FilmSchedulerImpl(filmCatalogue, scheduleRepository)
+
+    @BeforeEach
+    fun setUp() {
+        scheduleRepository
+            .openingHourIs(Duration.ofHours(8))
+            .closingHourIs(Duration.ofHours(22))
+            .premieresStarAt(Duration.ofHours(17))
+            .premieresEndAt(Duration.ofHours(21))
+    }
 
     @Test
     fun `seance is scheduled`() {
         // given
         filmCatalogue.containsFilm(filmOf("Cinderella", "PT2H"))
-        roomsRepository.containsRoom(roomOf("Room 1", "PT1H"))
+        scheduleRepository.hasDefinedRoom(roomOf("Room 1", "PT1H"))
 
         // when
         val seance = filmScheduler.schedule("Cinderella", "Room 1", "2022-10-21T09:00:00")
@@ -59,8 +60,8 @@ class FilmSchedulerImplTest {
     fun `chosen room is unavailable at the given time`(startsAt: String) {
         // given
         filmCatalogue.containsFilm(filmOf("Cinderella", "PT2H"))
-        roomsRepository.containsRoom(roomOf("Room 1", "PT1H"))
         scheduleRepository
+            .hasDefinedRoom(roomOf("Room 1", "PT1H"))
             .containsOccupation(roomOccupationOf("Room 1", "Shrek 1", dateTimeSlotOf("2022-10-21T11:00:00", "2022-10-21T13:30:00")))
             .containsOccupation(roomOccupationOf("Room 1", "Maintenance", dateTimeSlotOf("2022-10-21T13:30:00", "2022-10-21T14:30:00")))
             .containsOccupation(roomOccupationOf("Room 1", "Out of order", dateTimeSlotOf("2022-10-21T15:00:00", "2022-10-21T22:00:00")))
@@ -93,7 +94,7 @@ class FilmSchedulerImplTest {
     fun `the seance is out of cinema's working hours`(startsAt: String) {
         // given
         filmCatalogue.containsFilm(filmOf("Cinderella", "PT2H"))
-        roomsRepository.containsRoom(roomOf("Room 1", "PT1H"))
+        scheduleRepository.hasDefinedRoom(roomOf("Room 1", "PT1H"))
 
         // when
         val seance = filmScheduler.schedule("Cinderella", "Room 1", startsAt)
@@ -132,7 +133,7 @@ class FilmSchedulerImplTest {
     fun `the premiere seance is out of the premieres hours`(startsAt: String) {
         // given
         filmCatalogue.containsFilm(premiereFilmOf("Cinderella 3", "PT2H"))
-        roomsRepository.containsRoom(roomOf("Room 1", "PT1H"))
+        scheduleRepository.hasDefinedRoom(roomOf("Room 1", "PT1H"))
 
         // when
         val seance = filmScheduler.schedule("Cinderella 3", "Room 1", startsAt)
@@ -145,7 +146,7 @@ class FilmSchedulerImplTest {
     fun `the film requires 3D glasses`() {
         // given
         filmCatalogue.containsFilm(film3DOf("Avatar", "PT2H"))
-        roomsRepository.containsRoom(roomOf("Room 1", "PT1H"))
+        scheduleRepository.hasDefinedRoom(roomOf("Room 1", "PT1H"))
 
         // when
         filmScheduler.schedule("Avatar", "Room 1", "2022-10-21T09:00:00")

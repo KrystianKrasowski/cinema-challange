@@ -5,5 +5,6 @@ import org.kkrasowski.cinema.domain.RoomName
 
 interface RoomsRepository {
 
-    fun getByName(name: RoomName): Room
+    fun fetchAll(): Collection<Room>
+
 }

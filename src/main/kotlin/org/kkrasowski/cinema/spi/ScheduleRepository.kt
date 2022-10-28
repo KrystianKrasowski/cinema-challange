@@ -1,11 +1,13 @@
 package org.kkrasowski.cinema.spi
 
-import org.kkrasowski.cinema.domain.RoomName
+import org.kkrasowski.cinema.domain.CinemaSchedule
 import org.kkrasowski.cinema.domain.RoomOccupation
 
 interface ScheduleRepository {
 
-    fun getScheduleFor(roomName: RoomName): Collection<RoomOccupation>
+    fun getSchedule(): CinemaSchedule
 
-    fun save(occupations: Collection<RoomOccupation>)
+    fun getOccupations(): Collection<RoomOccupation>
+
+    fun save(version: Long, occupations: Collection<RoomOccupation>)
 }
