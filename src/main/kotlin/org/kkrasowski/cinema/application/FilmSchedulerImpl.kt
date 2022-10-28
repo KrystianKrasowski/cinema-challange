@@ -23,13 +23,14 @@ class FilmSchedulerImpl(private val films: FilmsCatalogue,
         val room = rooms.getByName(roomName)
         val filmEndTime = startsAt + film.time
         val maintenanceEndTime = filmEndTime + room.maintenanceTime
-        val filmSlot = DateTimeSlot(title.value, startsAt, filmEndTime)
-        val maintenanceSlot = DateTimeSlot("Maintenance", filmEndTime, maintenanceEndTime)
+        val filmSlot = DateTimeSlot(startsAt, filmEndTime)
+        val maintenanceSlot = DateTimeSlot(filmEndTime, maintenanceEndTime)
+        val occupations = schedules.getScheduleFor(roomName)
 
-        return if (room.hasFreeSlotFor(filmSlot) && room.hasFreeSlotFor(maintenanceSlot) && filmSlot.isValidFor(film.type) && maintenanceSlot.endsBeforeOrExactlyAt(closingHour)) {
+        return if (occupations.hasFreeSlotFor(filmSlot) && occupations.hasFreeSlotFor(maintenanceSlot) && filmSlot.isValidFor(film.type) && maintenanceSlot.endsBeforeOrExactlyAt(closingHour)) {
             schedules.save(listOf(
-                RoomOccupation(roomName, filmSlot),
-                RoomOccupation(roomName, maintenanceSlot)
+                RoomOccupation(roomName, labelOf(film), filmSlot, createAttributesFor(film)),
+                RoomOccupation(roomName, labelOfMaintenance(), maintenanceSlot, emptyList())
             ))
 
             Seance.SCHEDULED
@@ -37,6 +38,13 @@ class FilmSchedulerImpl(private val films: FilmsCatalogue,
             Seance.DECLINED
         }
     }
+
+    private fun Collection<RoomOccupation>.hasFreeSlotFor(slot: DateTimeSlot) = map { it.slot }
+        .none { it.clashesWith(slot) }
+
+    private fun createAttributesFor(film: Film) = listOf(RoomOccupation.Attribute.THE_3D_GLASSES_REQUIRED)
+        .takeIf { film.display == Film.Display.DISPLAY_3D }
+        ?: emptyList()
 
     private fun DateTimeSlot.isValidFor(type: Film.Type) = when(type) {
         Film.Type.REGULAR -> startsAfterOrExactlyAt(openingHour) && endsBeforeOrExactlyAt(closingHour)

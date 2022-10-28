@@ -32,9 +32,9 @@ class FilmSchedulerImplTest {
         // then
         //TODO: Consider returning sealed class subtype with scheduled slots (maybe other test)
         assertThat(seance).isEqualTo(Seance.SCHEDULED)
-        assertThat(scheduleRepository.getSlotsForRoom("Room 1"))
-            .contains(dateTimeSlotOf("Cinderella", "2022-10-21T09:00:00", "2022-10-21T11:00:00"))
-            .contains(dateTimeSlotOf("Maintenance", "2022-10-21T11:00:00", "2022-10-21T12:00:00"))
+        assertThat(scheduleRepository.getOccupationsForRoom("Room 1"))
+            .contains(roomOccupationOf("Room 1", "Cinderella", dateTimeSlotOf("2022-10-21T09:00:00", "2022-10-21T11:00:00")))
+            .contains(roomOccupationOf("Room 1", "Maintenance", dateTimeSlotOf("2022-10-21T11:00:00", "2022-10-21T12:00:00")))
     }
 
     @ParameterizedTest
@@ -50,12 +50,11 @@ class FilmSchedulerImplTest {
     fun `chosen room is unavailable at the given time`(startsAt: String) {
         // given
         filmCatalogue.containsFilm(filmOf("Cinderella", "PT2H"))
-        roomsRepository.containsRoom(
-            roomOf("Room 1", "PT1H", listOf(
-            dateTimeSlotOf("Shrek", "2022-10-21T11:00:00", "2022-10-21T13:30:00"),
-            dateTimeSlotOf("Maintenance", "2022-10-21T13:30:00", "2022-10-21T14:30:00"),
-            dateTimeSlotOf("Unavailable", "2022-10-21T15:00:00", "2022-10-21T22:00:00")
-        )))
+        roomsRepository.containsRoom(roomOf("Room 1", "PT1H"))
+        scheduleRepository
+            .containsOccupation(roomOccupationOf("Room 1", "Shrek 1", dateTimeSlotOf("2022-10-21T11:00:00", "2022-10-21T13:30:00")))
+            .containsOccupation(roomOccupationOf("Room 1", "Maintenance", dateTimeSlotOf("2022-10-21T13:30:00", "2022-10-21T14:30:00")))
+            .containsOccupation(roomOccupationOf("Room 1", "Out of order", dateTimeSlotOf("2022-10-21T15:00:00", "2022-10-21T22:00:00")))
 
         // when
         val seance = filmScheduler.schedule("Cinderella", "Room 1", startsAt)
@@ -133,7 +132,21 @@ class FilmSchedulerImplTest {
         assertThat(seance).isEqualTo(Seance.DECLINED)
     }
 
-    fun `the film requires 3D glasses`() {}
+    @Test
+    fun `the film requires 3D glasses`() {
+        // given
+        filmCatalogue.containsFilm(film3DOf("Avatar", "PT2H"))
+        roomsRepository.containsRoom(roomOf("Room 1", "PT1H"))
+
+        // when
+        filmScheduler.schedule("Avatar", "Room 1", "2022-10-21T09:00:00")
+
+        // then
+        assertThat(scheduleRepository.getOccupationsForRoom("Room 1"))
+            .contains(roomOccupationOf("Room 1", "Avatar", dateTimeSlotOf("2022-10-21T09:00:00", "2022-10-21T11:00:00"), listOf(
+                RoomOccupation.Attribute.THE_3D_GLASSES_REQUIRED
+            )))
+    }
 
     fun `chosen film has not been found in the catalogue`() {}
 
@@ -144,5 +157,4 @@ class FilmSchedulerImplTest {
         roomName = roomName.toRoomName(),
         startsAt = LocalDateTime.parse(startsAt)
     )
-
 }

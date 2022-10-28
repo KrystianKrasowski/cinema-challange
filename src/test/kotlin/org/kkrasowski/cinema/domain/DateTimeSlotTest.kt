@@ -28,8 +28,8 @@ class DateTimeSlotTest {
     )
     fun `should verify that slots clashes one with another`(startsAt: String, endsAt: String, clashes: Boolean) {
         // given
-        val dateTimeSlotA = dateTimeSlotOf("A", "2022-10-21T12:00:00", "2022-10-21T15:00:00")
-        val dateTimeSlotB = dateTimeSlotOf("B", startsAt, endsAt)
+        val dateTimeSlotA = dateTimeSlotOf("2022-10-21T12:00:00", "2022-10-21T15:00:00")
+        val dateTimeSlotB = dateTimeSlotOf(startsAt, endsAt)
 
         // when
         val result1 = dateTimeSlotA.clashesWith(dateTimeSlotB)
@@ -48,7 +48,7 @@ class DateTimeSlotTest {
         "2022-10-21T16:45:00, 2022-10-21T15:00:00",
     )
     fun `should not create date time slot`(startsAt: String, endsAt: String) {
-        assertThatThrownBy { dateTimeSlotOf("Slot", LocalDateTime.parse(startsAt), LocalDateTime.parse(endsAt)) }
+        assertThatThrownBy { dateTimeSlotOf(LocalDateTime.parse(startsAt), LocalDateTime.parse(endsAt)) }
             .isInstanceOf(IllegalArgumentException::class.java)
     }
 
@@ -82,7 +82,7 @@ class DateTimeSlotTest {
     )
     fun `should verify that slot starts after or exactly at given time`(time: String, startsAfter: Boolean) {
         // given
-        val slot = dateTimeSlotOf("Slot", "2022-10-21T12:00:00", "2022-10-21T14:00:00")
+        val slot = dateTimeSlotOf("2022-10-21T12:00:00", "2022-10-21T14:00:00")
 
         // when
         val result = slot.startsAfterOrExactlyAt(Duration.parse(time))
@@ -120,7 +120,7 @@ class DateTimeSlotTest {
     )
     fun `should verify that slot ends before or exactly at given time`(time: String, endsAt: Boolean) {
         // given
-        val slot = dateTimeSlotOf("Slot", "2022-10-21T12:00:00", "2022-10-21T14:00:00")
+        val slot = dateTimeSlotOf("2022-10-21T12:00:00", "2022-10-21T14:00:00")
 
         // when
         val result = slot.endsBeforeOrExactlyAt(Duration.parse(time))
