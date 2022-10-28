@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.kkrasowski.cinema.api.FilmScheduler
 import org.kkrasowski.cinema.assertions.assertThat
 import org.kkrasowski.cinema.domain.*
+import org.kkrasowski.cinema.domain.RoomOccupation.Attribute
 import org.kkrasowski.cinema.spi.FilmsCatalogueStub
 import org.kkrasowski.cinema.spi.ScheduleRepositoryStub
 import java.time.Duration
@@ -26,7 +27,7 @@ class FilmSchedulerImplTest {
         scheduleRepository
             .openingHourIs(Duration.ofHours(8))
             .closingHourIs(Duration.ofHours(22))
-            .premieresStarAt(Duration.ofHours(17))
+            .premieresStartAt(Duration.ofHours(17))
             .premieresEndAt(Duration.ofHours(21))
     }
 
@@ -34,7 +35,9 @@ class FilmSchedulerImplTest {
     fun `seance is scheduled`() {
         // given
         filmCatalogue.containsFilm(filmOf("Cinderella", "PT2H"))
-        scheduleRepository.hasDefinedRoom(roomOf("Room 1", "PT1H"))
+        scheduleRepository
+            .hasVersion(1)
+            .hasDefinedRoom(roomOf("Room 1", "PT1H"))
 
         // when
         val result = filmScheduler.schedule("Cinderella", "Room 1", "2022-10-21T09:00:00")
@@ -42,6 +45,7 @@ class FilmSchedulerImplTest {
         // then
         assertThat(result)
             .isSuccess()
+            .hasVersion(2)
             .contains(roomOccupationOf("Room 1", "Cinderella", dateTimeSlotOf("2022-10-21T09:00:00", "2022-10-21T11:00:00")))
             .contains(roomOccupationOf("Room 1", "Maintenance", dateTimeSlotOf("2022-10-21T11:00:00", "2022-10-21T12:00:00")))
 
@@ -58,6 +62,7 @@ class FilmSchedulerImplTest {
         "2022-10-21T12:00:00",
         "2022-10-21T13:00:00",
         "2022-10-21T13:30:00",
+        "2022-10-21T14:45:00",
     ])
     fun `chosen room is unavailable at the given time`(startsAt: String) {
         // given
@@ -156,7 +161,7 @@ class FilmSchedulerImplTest {
         // then
         assertThat(scheduleRepository.getOccupations())
             .contains(roomOccupationOf("Room 1", "Avatar", dateTimeSlotOf("2022-10-21T09:00:00", "2022-10-21T11:00:00"), listOf(
-                RoomOccupation.Attribute.THE_3D_GLASSES_REQUIRED
+                Attribute.THE_3D_GLASSES_REQUIRED
             )))
     }
 

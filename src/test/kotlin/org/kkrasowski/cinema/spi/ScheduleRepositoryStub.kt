@@ -9,7 +9,7 @@ class ScheduleRepositoryStub : ScheduleRepository {
     private val rooms = mutableListOf<Room>()
     private val occupations = mutableListOf<RoomOccupation>()
 
-    private var version: Long = 1
+    private var version: Long = 0
     private var openingHour: TemporalAmount = Duration.ofHours(0)
     private var closingHour: TemporalAmount = Duration.ofHours(0)
     private var premieresStartAt: TemporalAmount = Duration.ofHours(0)
@@ -26,13 +26,15 @@ class ScheduleRepositoryStub : ScheduleRepository {
         occupations.forEach { this.occupations.add(it) }
     }
 
+    fun hasVersion(version: Long) = apply { this.version = version }
+
     fun getOccupations(): Collection<RoomOccupation> = occupations.toList()
 
     fun openingHourIs(hour: TemporalAmount) = apply { this.openingHour = hour }
 
     fun closingHourIs(hour: TemporalAmount) = apply { this.closingHour = hour }
 
-    fun premieresStarAt(hour: TemporalAmount) = apply { this.premieresStartAt = hour }
+    fun premieresStartAt(hour: TemporalAmount) = apply { this.premieresStartAt = hour }
 
     fun premieresEndAt(hour: TemporalAmount) = apply { this.premieresEndAt = hour }
 
