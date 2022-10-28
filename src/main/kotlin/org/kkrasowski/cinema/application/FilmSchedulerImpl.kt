@@ -15,6 +15,8 @@ class FilmSchedulerImpl(private val films: FilmsCatalogue,
     // TODO: Could be in some configuration SPI
     private val openingHour = Duration.parse("PT8H")
     private val closingHour = Duration.parse("PT22H")
+    private val premieresStartHour = Duration.parse("PT17H")
+    private val premieresEndHour = Duration.parse("PT21H")
 
     override fun schedule(title: FilmTitle, roomName: RoomName, startsAt: LocalDateTime): Seance {
         val film = films.find(title)
@@ -24,7 +26,7 @@ class FilmSchedulerImpl(private val films: FilmsCatalogue,
         val filmSlot = DateTimeSlot(title.value, startsAt, filmEndTime)
         val maintenanceSlot = DateTimeSlot("Maintenance", filmEndTime, maintenanceEndTime)
 
-        return if (filmSlot.isValidFor(room) && maintenanceSlot.isValidFor(room)) {
+        return if (room.hasFreeSlotFor(filmSlot) && room.hasFreeSlotFor(maintenanceSlot) && filmSlot.isValidFor(film.type) && maintenanceSlot.endsBeforeOrExactlyAt(closingHour)) {
             schedules.save(listOf(
                 RoomOccupation(roomName, filmSlot),
                 RoomOccupation(roomName, maintenanceSlot)
@@ -36,7 +38,8 @@ class FilmSchedulerImpl(private val films: FilmsCatalogue,
         }
     }
 
-    private fun DateTimeSlot.isValidFor(room: Room) = room.hasFreeSlotFor(this)
-            && startsAfterOrExactlyAt(openingHour)
-            && endsBeforeOrExactlyAt(closingHour)
+    private fun DateTimeSlot.isValidFor(type: Film.Type) = when(type) {
+        Film.Type.REGULAR -> startsAfterOrExactlyAt(openingHour) && endsBeforeOrExactlyAt(closingHour)
+        Film.Type.PREMIERE -> startsAfterOrExactlyAt(premieresStartHour) && endsBeforeOrExactlyAt(premieresEndHour)
+    }
 }

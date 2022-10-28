@@ -94,7 +94,44 @@ class FilmSchedulerImplTest {
         assertThat(seance).isEqualTo(Seance.DECLINED)
     }
 
-    fun `the premiere seance is out of the premieres hours`() {}
+    @ParameterizedTest
+    @ValueSource(strings = [
+        "2022-10-21T00:00:00",
+        "2022-10-21T01:00:00",
+        "2022-10-21T02:00:00",
+        "2022-10-21T03:00:00",
+        "2022-10-21T04:00:00",
+        "2022-10-21T05:00:00",
+        "2022-10-21T06:00:00",
+        "2022-10-21T07:00:00",
+        "2022-10-21T08:00:00",
+        "2022-10-21T09:00:00",
+        "2022-10-21T10:00:00",
+        "2022-10-21T11:00:00",
+        "2022-10-21T12:00:00",
+        "2022-10-21T13:00:00",
+        "2022-10-21T14:00:00",
+        "2022-10-21T15:00:00",
+        "2022-10-21T16:00:00",
+        "2022-10-21T16:59:59",
+        "2022-10-21T19:00:01",
+        "2022-10-21T20:00:00",
+        "2022-10-21T21:00:00",
+        "2022-10-21T22:00:00",
+        "2022-10-21T23:00:00",
+        "2022-10-21T23:59:59",
+    ])
+    fun `the premiere seance is out of the premieres hours`(startsAt: String) {
+        // given
+        filmCatalogue.containsFilm(premiereFilmOf("Cinderella 3", "PT2H"))
+        roomsRepository.containsRoom(roomOf("Room 1", "PT1H"))
+
+        // when
+        val seance = filmScheduler.schedule("Cinderella 3", "Room 1", startsAt)
+
+        // then
+        assertThat(seance).isEqualTo(Seance.DECLINED)
+    }
 
     fun `the film requires 3D glasses`() {}
 
@@ -103,8 +140,8 @@ class FilmSchedulerImplTest {
     fun `chosen room does not appear in the repository`() {}
 
     private fun FilmScheduler.schedule(title: String, roomName: String, startsAt: String) = schedule(
-        title = FilmTitle(title),
-        roomName = RoomName(roomName),
+        title = title.toFilmTitle(),
+        roomName = roomName.toRoomName(),
         startsAt = LocalDateTime.parse(startsAt)
     )
 

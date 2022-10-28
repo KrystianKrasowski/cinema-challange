@@ -4,12 +4,19 @@ import java.time.Duration
 import java.time.LocalDateTime
 
 fun filmOf(title: String, duration: String) = Film(
-    title = FilmTitle(title),
-    time = Duration.parse(duration)
+    title = title.toFilmTitle(),
+    time = Duration.parse(duration),
+    type = Film.Type.REGULAR
+)
+
+fun premiereFilmOf(title: String, duration: String) = Film(
+    title = title.toFilmTitle(),
+    time = Duration.parse(duration),
+    type = Film.Type.PREMIERE
 )
 
 fun roomOf(name: String, maintenanceTime: String, occupations: Collection<DateTimeSlot> = listOf()) = Room(
-    name = RoomName(name),
+    name = name.toRoomName(),
     maintenanceTime = Duration.parse(maintenanceTime),
     occupations = occupations
 )
