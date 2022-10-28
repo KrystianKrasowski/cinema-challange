@@ -22,8 +22,7 @@ class FilmSchedulerImpl(private val films: FilmsCatalogue,
         val scheduledFilm = createFilmOccupation(roomName, films.find(filmTitle), startsAt)
         val scheduledMaintenance = createMaintenanceOccupation(rooms.getByName(roomName), scheduledFilm.endsAt)
 
-        val occupations = schedules.getScheduleFor(roomName)
-        return if (occupations.hasFreeSlotFor(scheduledFilm) && occupations.hasFreeSlotFor(scheduledMaintenance) && scheduledFilm.isWithinValidHours() && scheduledMaintenance.endsBeforeOrExactlyAt(closingHour)) {
+        return if (scheduledFilm.isValid() && scheduledMaintenance.isValid()) {
             schedules.save(listOf(
                 scheduledFilm,
                 scheduledMaintenance
@@ -52,7 +51,10 @@ class FilmSchedulerImpl(private val films: FilmsCatalogue,
         return RoomOccupation(room.name, labelOfMaintenance(), dateTimeSlotOf(startsAt, startsAt + room.maintenanceTime), emptyList())
     }
 
-    private fun Collection<RoomOccupation>.hasFreeSlotFor(occupation: RoomOccupation) = none { it.clashesWith(occupation) }
+    private fun RoomOccupation.isValid(): Boolean {
+        val occupations = schedules.getScheduleFor(roomName)
+        return occupations.none { it.clashesWith(this) } && isWithinValidHours()
+    }
 
     private fun RoomOccupation.isWithinValidHours() = when {
         hasAttribute(RoomOccupation.Attribute.PREMIERE) -> startsAfterOrExactlyAt(premieresStartHour) && endsBeforeOrExactlyAt(premieresEndHour)
