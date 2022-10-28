@@ -2,12 +2,13 @@ package org.kkrasowski.cinema.application
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.kkrasowski.cinema.api.*
 import org.kkrasowski.cinema.domain.*
 import org.kkrasowski.cinema.spi.FilmsCatalogueStub
 import org.kkrasowski.cinema.spi.RoomsRepositoryStub
 import org.kkrasowski.cinema.spi.ScheduleRepositoryStub
-import java.time.Duration
 import java.time.LocalDateTime
 
 class FilmSchedulerImplTest {
@@ -36,15 +37,39 @@ class FilmSchedulerImplTest {
             .contains(dateTimeSlotOf("Maintenance", "2022-10-21T11:00:00", "2022-10-21T12:00:00"))
     }
 
-    fun `chosen room is unavailable at the given time`() {}
+    @ParameterizedTest
+    @ValueSource(strings = [
+        "2022-10-21T08:00:01",
+        "2022-10-21T09:00:00",
+        "2022-10-21T10:00:00",
+        "2022-10-21T11:00:00",
+        "2022-10-21T12:00:00",
+        "2022-10-21T13:00:00",
+        "2022-10-21T13:30:00",
+    ])
+    fun `chosen room is unavailable at the given time`(startsAt: String) {
+        // given
+        filmCatalogue.containsFilm(filmOf("Cinderella", "PT2H"))
+        roomsRepository.containsRoom(
+            roomOf("Room 1", "PT1H", listOf(
+            dateTimeSlotOf("Shrek", "2022-10-21T11:00:00", "2022-10-21T13:30:00"),
+            dateTimeSlotOf("Maintenance", "2022-10-21T13:30:00", "2022-10-21T14:30:00"),
+            dateTimeSlotOf("Unavailable", "2022-10-21T15:00:00", "2022-10-21T22:00:00")
+        ))
+        )
+
+        // when
+        val seance = filmScheduler.schedule("Cinderella", "Room 1", startsAt)
+
+        // then
+        assertThat(seance).isEqualTo(Seance.DECLINED)
+    }
 
     fun `the seance is out of cinema's working hours`() {}
 
     fun `the premiere seance is out of the premieres hours`() {}
 
     fun `the film requires 3D glasses`() {}
-
-    fun `the seance clashes with another one`() {}
 
     fun `chosen film has not been found in the catalogue`() {}
 
@@ -57,20 +82,3 @@ class FilmSchedulerImplTest {
     )
 
 }
-
-// TODO: Extract these functions somewhere
-private fun filmOf(title: String, duration: String) = Film(
-    title = FilmTitle(title),
-    time = Duration.parse(duration)
-)
-
-private fun roomOf(name: String, maintenanceTime: String) = Room(
-    name = RoomName(name),
-    maintenanceTime = Duration.parse(maintenanceTime)
-)
-
-private fun dateTimeSlotOf(name: String, start: String, end: String) = DateTimeSlot(
-    name = name,
-    start = LocalDateTime.parse(start),
-    end = LocalDateTime.parse(end)
-)

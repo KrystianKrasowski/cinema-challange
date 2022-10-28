@@ -19,11 +19,19 @@ class FilmSchedulerImpl(private val films: FilmsCatalogue,
         val filmSlot = DateTimeSlot(title.value, startsAt, filmEndTime)
         val maintenanceSlot = DateTimeSlot("Maintenance", filmEndTime, maintenanceEndTime)
 
-        schedules.save(listOf(
-            RoomOccupation(roomName, filmSlot),
-            RoomOccupation(roomName, maintenanceSlot)
-        ))
+        return if (areValid(room, filmSlot, maintenanceSlot)) {
+            schedules.save(listOf(
+                RoomOccupation(roomName, filmSlot),
+                RoomOccupation(roomName, maintenanceSlot)
+            ))
 
-        return Seance.SCHEDULED
+            Seance.SCHEDULED
+        } else {
+            Seance.DECLINED
+        }
+    }
+
+    private fun areValid(room: Room, filmSlot: DateTimeSlot, maintenanceSlot: DateTimeSlot): Boolean {
+        return room.hasFreeSlotFor(filmSlot) && room.hasFreeSlotFor(maintenanceSlot)
     }
 }
