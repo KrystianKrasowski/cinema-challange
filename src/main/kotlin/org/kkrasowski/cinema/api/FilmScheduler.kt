@@ -1,8 +1,10 @@
 package org.kkrasowski.cinema.api
 
 import arrow.core.Either
-import arrow.core.Validated
-import org.kkrasowski.cinema.domain.*
+import org.kkrasowski.cinema.domain.Failure
+import org.kkrasowski.cinema.domain.FilmTitle
+import org.kkrasowski.cinema.domain.RoomName
+import org.kkrasowski.cinema.domain.ScheduledSeance
 import java.time.LocalDateTime
 
 interface FilmScheduler {

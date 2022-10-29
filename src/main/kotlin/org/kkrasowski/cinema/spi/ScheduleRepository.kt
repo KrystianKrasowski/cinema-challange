@@ -10,7 +10,5 @@ interface ScheduleRepository {
 
     fun getSchedule(): CinemaSchedule
 
-    fun save(version: Long, occupations: Collection<RoomOccupation>)
-
     fun save(scheduledSeance: ScheduledSeance): Either<Failure, ScheduledSeance>
 }

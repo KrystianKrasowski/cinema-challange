@@ -26,10 +26,6 @@ class ScheduleRepositoryStub : ScheduleRepository {
         return CinemaSchedule(version, occupations.toList(), rooms.toList(), configuration)
     }
 
-    override fun save(version: Long, occupations: Collection<RoomOccupation>) {
-        occupations.forEach { this.occupations.add(it) }
-    }
-
     override fun save(scheduledSeance: ScheduledSeance): Either<Failure, ScheduledSeance> {
         return failureReason
             ?.let { Failure(it) }

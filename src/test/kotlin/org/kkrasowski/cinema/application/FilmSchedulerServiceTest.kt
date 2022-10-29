@@ -15,13 +15,13 @@ import org.kkrasowski.cinema.spi.ScheduleRepositoryStub
 import java.time.Duration
 import java.time.LocalDateTime
 
-class FilmSchedulerImplTest {
+class FilmSchedulerServiceTest {
 
     private val filmCatalogue = FilmsCatalogueStub()
     private val scheduleRepository = ScheduleRepositoryStub()
 
     private val filmScheduler
-        get() = FilmSchedulerImpl(filmCatalogue, scheduleRepository)
+        get() = FilmSchedulerService(filmCatalogue, scheduleRepository)
 
     @BeforeEach
     fun setUp() {
@@ -224,4 +224,13 @@ class FilmSchedulerImplTest {
             is Either.Left -> ScheduleResult.Failure(schedule.value.reason)
         }
     }
+}
+
+sealed class ScheduleResult {
+
+    fun asSuccess() = this as Success
+
+    data class Success(val version: Long, val occupations: Collection<RoomOccupation>) : ScheduleResult()
+
+    data class Failure(val reason: String) : ScheduleResult()
 }

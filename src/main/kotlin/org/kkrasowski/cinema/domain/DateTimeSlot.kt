@@ -10,11 +10,7 @@ data class DateTimeSlot(val start: LocalDateTime, val end: LocalDateTime) {
 
     fun clashesWith(other: DateTimeSlot): Boolean = other.start in start..end || other.end in start..end
 
-    fun startsAfterOrExactlyAt(time: TemporalAmount): Boolean = start >= date + time
-
     fun startsBefore(time: TemporalAmount): Boolean = start < date + time
-
-    fun endsBeforeOrExactlyAt(time: TemporalAmount): Boolean = end <= date + time
 
     fun endsAfter(time: TemporalAmount): Boolean = end > date + time
 }

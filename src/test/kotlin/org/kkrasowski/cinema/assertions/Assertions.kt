@@ -1,10 +1,10 @@
 package org.kkrasowski.cinema.assertions
 
 import org.assertj.core.api.AbstractAssert
+import org.kkrasowski.cinema.application.ScheduleResult
+import org.kkrasowski.cinema.application.ScheduleResult.Failure
+import org.kkrasowski.cinema.application.ScheduleResult.Success
 import org.kkrasowski.cinema.domain.RoomOccupation
-import org.kkrasowski.cinema.domain.ScheduleResult
-import org.kkrasowski.cinema.domain.ScheduleResult.Failure
-import org.kkrasowski.cinema.domain.ScheduleResult.Success
 
 class ScheduleResultAssert(result: ScheduleResult) : AbstractAssert<ScheduleResultAssert, ScheduleResult>(result, ScheduleResultAssert::class.java) {
 

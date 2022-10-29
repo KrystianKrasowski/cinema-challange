@@ -54,45 +54,6 @@ class DateTimeSlotTest {
 
     @ParameterizedTest
     @CsvSource(
-        "PT0H, true",
-        "PT1H, true",
-        "PT2H, true",
-        "PT3H, true",
-        "PT4H, true",
-        "PT5H, true",
-        "PT6H, true",
-        "PT7H, true",
-        "PT8H, true",
-        "PT9H, true",
-        "PT10H, true",
-        "PT11H, true",
-        "PT12H, true",
-        "PT12H1S, false",
-        "PT13H, false",
-        "PT14H, false",
-        "PT15H, false",
-        "PT16H, false",
-        "PT17H, false",
-        "PT18H, false",
-        "PT19H, false",
-        "PT20H, false",
-        "PT21H, false",
-        "PT22H, false",
-        "PT23H, false",
-    )
-    fun `should verify that slot starts after or exactly at given time`(time: String, startsAfter: Boolean) {
-        // given
-        val slot = dateTimeSlotOf("2022-10-21T12:00:00", "2022-10-21T14:00:00")
-
-        // when
-        val result = slot.startsAfterOrExactlyAt(Duration.parse(time))
-
-        // then
-        assertThat(result).isEqualTo(startsAfter)
-    }
-
-    @ParameterizedTest
-    @CsvSource(
         "PT0H, false",
         "PT1H, false",
         "PT2H, false",
@@ -106,7 +67,8 @@ class DateTimeSlotTest {
         "PT10H, false",
         "PT11H, false",
         "PT12H, false",
-        "PT13H, false",
+        "PT12H1S, true",
+        "PT13H, true",
         "PT14H, true",
         "PT15H, true",
         "PT16H, true",
@@ -118,12 +80,50 @@ class DateTimeSlotTest {
         "PT22H, true",
         "PT23H, true",
     )
-    fun `should verify that slot ends before or exactly at given time`(time: String, endsAt: Boolean) {
+    fun `should verify that slot starts before given time`(time: String, startsBefore: Boolean) {
         // given
         val slot = dateTimeSlotOf("2022-10-21T12:00:00", "2022-10-21T14:00:00")
 
         // when
-        val result = slot.endsBeforeOrExactlyAt(Duration.parse(time))
+        val result = slot.startsBefore(Duration.parse(time))
+
+        // then
+        assertThat(result).isEqualTo(startsBefore)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+        "PT0H, true",
+        "PT1H, true",
+        "PT2H, true",
+        "PT3H, true",
+        "PT4H, true",
+        "PT5H, true",
+        "PT6H, true",
+        "PT7H, true",
+        "PT8H, true",
+        "PT9H, true",
+        "PT10H, true",
+        "PT11H, true",
+        "PT12H, true",
+        "PT13H, true",
+        "PT14H, false",
+        "PT15H, false",
+        "PT16H, false",
+        "PT17H, false",
+        "PT18H, false",
+        "PT19H, false",
+        "PT20H, false",
+        "PT21H, false",
+        "PT22H, false",
+        "PT23H, false",
+    )
+    fun `should verify that slot ends after given time`(time: String, endsAt: Boolean) {
+        // given
+        val slot = dateTimeSlotOf("2022-10-21T12:00:00", "2022-10-21T14:00:00")
+
+        // when
+        val result = slot.endsAfter(Duration.parse(time))
 
         // then
         assertThat(result).isEqualTo(endsAt)

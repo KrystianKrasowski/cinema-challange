@@ -7,8 +7,8 @@ import org.kkrasowski.cinema.spi.FilmsCatalogue
 import org.kkrasowski.cinema.spi.ScheduleRepository
 import java.time.LocalDateTime
 
-class FilmSchedulerImpl(private val films: FilmsCatalogue,
-                        private val scheduleRepository: ScheduleRepository) : FilmScheduler {
+class FilmSchedulerService(private val films: FilmsCatalogue,
+                           private val scheduleRepository: ScheduleRepository) : FilmScheduler {
 
     private val cinemaSchedule
         get() = scheduleRepository.getSchedule()
@@ -19,6 +19,7 @@ class FilmSchedulerImpl(private val films: FilmsCatalogue,
             .flatMap { scheduleRepository.save(it) }
     }
 
+    // Film catalogue is not a part of the cinema schedule domain, thus fetching the film by name is the orchiestrator's job
     private fun getFilmByTitle(title: FilmTitle) = films
         .find(title)
         ?.right()

@@ -4,9 +4,6 @@ import arrow.core.*
 import org.kkrasowski.cinema.domain.RoomOccupation.Attribute
 import java.time.LocalDateTime
 
-typealias RoomOccupations = Collection<RoomOccupation>
-typealias Rooms = Collection<Room>
-
 class CinemaSchedule(private val version: Long,
                      private val scheduledOccupations: RoomOccupations,
                      private val rooms: Rooms,
@@ -19,7 +16,8 @@ class CinemaSchedule(private val version: Long,
             .flatMap { it.validate() }
     }
 
-    // TODO: Add comment WHY this is not extracted to separate class
+    // This factory is not extracted to separate file because it is not so complex
+    // All high-level scheduling logic is in one place
     private fun createScheduledSeance(room: Room, film: Film, startsAt: LocalDateTime) = ScheduledSeance(
         version = version + 1,
         occupations = listOf(
@@ -53,7 +51,8 @@ class CinemaSchedule(private val version: Long,
     private fun createPremiereAttribute(type: Film.Type) = Attribute.PREMIERE
         .takeIf { type == Film.Type.PREMIERE }
 
-    // TODO: Add comment WHY this is not extracted to separate class
+    // This validation not extracted to separate file because it is not so complex
+    // All high-level scheduling logic is in one place
     private fun ScheduledSeance.validate() = when {
         clashesWithOtherSeance() -> failureOf("Clashes with other seance or is unavailable")
         isNotWithinPremiereHours() -> failureOf("Is not within premiere hours")
@@ -73,8 +72,3 @@ class CinemaSchedule(private val version: Long,
 }
 
 private fun failureOf(reason: String) = Failure(reason).left()
-
-// TODO: Move to Room file along with typealias
-fun Rooms.getByName(name: RoomName) = firstOrNull { it.name == name }
-    ?.right()
-    ?: Failure("""There is no such room as "$name".""").left()
