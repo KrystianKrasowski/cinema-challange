@@ -12,7 +12,11 @@ data class DateTimeSlot(val start: LocalDateTime, val end: LocalDateTime) {
 
     fun startsAfterOrExactlyAt(time: TemporalAmount): Boolean = start >= date + time
 
+    fun startsBefore(time: TemporalAmount): Boolean = start < date + time
+
     fun endsBeforeOrExactlyAt(time: TemporalAmount): Boolean = end <= date + time
+
+    fun endsAfter(time: TemporalAmount): Boolean = end > date + time
 }
 
 fun dateTimeSlotOf(start: LocalDateTime, end: LocalDateTime) = DateTimeSlot(start, end)

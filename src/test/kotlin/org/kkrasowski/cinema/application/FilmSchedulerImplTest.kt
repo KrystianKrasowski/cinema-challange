@@ -1,7 +1,6 @@
 package org.kkrasowski.cinema.application
 
 import arrow.core.Either
-import arrow.core.Validated
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -79,7 +78,9 @@ class FilmSchedulerImplTest {
         val result = filmScheduler.schedule("Cinderella", "Room 1", startsAt)
 
         // then
-        assertThat(result).isFailure()
+        assertThat(result)
+            .isFailure()
+            .hasReason("Clashes with other seance or is unavailable")
     }
 
     @ParameterizedTest
@@ -109,7 +110,9 @@ class FilmSchedulerImplTest {
         val result = filmScheduler.schedule("Cinderella", "Room 1", startsAt)
 
         // then
-        assertThat(result).isFailure()
+        assertThat(result)
+            .isFailure()
+            .hasReason("Is not within working hours")
     }
 
     @ParameterizedTest
@@ -148,7 +151,9 @@ class FilmSchedulerImplTest {
         val result = filmScheduler.schedule("Cinderella 3", "Room 1", startsAt)
 
         // then
-        assertThat(result).isFailure()
+        assertThat(result)
+            .isFailure()
+            .hasReason("Is not within premiere hours")
     }
 
     @Test
@@ -179,7 +184,9 @@ class FilmSchedulerImplTest {
         val result = filmScheduler.schedule("Avatar", "Room 1", "2022-10-21T09:00:00")
 
         // then
-        assertThat(result).isFailure()
+        assertThat(result)
+            .isFailure()
+            .hasReason("Saving failure")
     }
 
     fun `chosen film has not been found in the catalogue`() {}

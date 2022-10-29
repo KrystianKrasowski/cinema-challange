@@ -1,29 +1,27 @@
 package org.kkrasowski.cinema.assertions
 
 import org.assertj.core.api.AbstractAssert
-import org.kkrasowski.cinema.domain.Failure
 import org.kkrasowski.cinema.domain.RoomOccupation
 import org.kkrasowski.cinema.domain.ScheduleResult
+import org.kkrasowski.cinema.domain.ScheduleResult.Failure
 import org.kkrasowski.cinema.domain.ScheduleResult.Success
-import org.kkrasowski.cinema.domain.ScheduledSeance
-import org.kkrasowski.cinema.domain.ScheduleResult.Failure as ResultFailure
 
 class ScheduleResultAssert(result: ScheduleResult) : AbstractAssert<ScheduleResultAssert, ScheduleResult>(result, ScheduleResultAssert::class.java) {
 
     fun isSuccess(): ScheduleSuccessAssert {
         if (actual !is Success) {
-            failWithMessage("Expected result to be Success")
+            failWithMessage("Expected result to be Success, but was <%s>", actual)
         }
 
         return ScheduleSuccessAssert(actual as Success)
     }
 
-    fun isFailure() : ScheduleResultAssert {
-        if (actual !is ResultFailure) {
+    fun isFailure() : ScheduleFailureAssert {
+        if (actual !is Failure) {
             failWithMessage("Expected result to be Failure")
         }
 
-        return myself
+        return ScheduleFailureAssert(actual as Failure)
     }
 }
 
@@ -46,34 +44,9 @@ class ScheduleSuccessAssert(result: Success) : AbstractAssert<ScheduleSuccessAss
     }
 }
 
-class ScheduledSeanceAssert(result: ScheduledSeance?) : AbstractAssert<ScheduledSeanceAssert, ScheduledSeance>(result, ScheduledSeanceAssert::class.java) {
+class ScheduleFailureAssert(result: Failure) : AbstractAssert<ScheduleFailureAssert, Failure>(result, ScheduleFailureAssert::class.java) {
 
-    fun hasVersion(version: Long): ScheduledSeanceAssert {
-        isNotNull
-
-        if (actual.version != version) {
-            failWithMessage("Expected aggregate version to be <%s>, but was <%s>", version, actual.version)
-        }
-
-        return myself
-    }
-
-    fun contains(occupation: RoomOccupation): ScheduledSeanceAssert {
-        isNotNull
-
-        if (!actual.occupations.contains(occupation)) {
-            failWithMessage("Expected scheduled occupations to contain <%s>", occupation)
-        }
-
-        return myself
-    }
-}
-
-class FailureAssert(failure: Failure?) : AbstractAssert<FailureAssert, Failure>(failure, FailureAssert::class.java) {
-
-    fun reasonIs(reason: String): FailureAssert {
-        isNotNull
-
+    fun hasReason(reason: String): ScheduleFailureAssert {
         if (actual.reason != reason) {
             failWithMessage("Expected reason to be <%s>, but was <%s>", reason, actual.reason)
         }
@@ -82,9 +55,4 @@ class FailureAssert(failure: Failure?) : AbstractAssert<FailureAssert, Failure>(
     }
 }
 
-
 fun assertThat(result: ScheduleResult) = ScheduleResultAssert(result)
-
-fun assertThat(result: ScheduledSeance?) = ScheduledSeanceAssert(result)
-
-fun assertThat(failure: Failure) = FailureAssert(failure)
