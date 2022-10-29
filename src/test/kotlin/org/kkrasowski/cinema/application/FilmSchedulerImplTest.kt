@@ -203,7 +203,20 @@ class FilmSchedulerImplTest {
             .hasReason("""Film catalogue does not contain the film "Shrek".""")
     }
 
-    fun `chosen room does not appear in the repository`() {}
+    @Test
+    fun `chosen room does not appear in the repository`() {
+        // given
+        filmCatalogue.containsFilm(film3DOf("Avatar", "PT2H"))
+        scheduleRepository.hasDefinedRoom(roomOf("Room 1", "PT1H"))
+
+        // when
+        val result = filmScheduler.schedule("Avatar", "Room 315", "2022-10-21T09:00:00")
+
+        // then
+        assertThat(result)
+            .isFailure()
+            .hasReason("""There is no such room as "Room 315".""")
+    }
 
     private fun FilmScheduler.schedule(title: String, roomName: String, startsAt: String): ScheduleResult {
         return when (val schedule = schedule(title.toFilmTitle(), roomName.toRoomName(), LocalDateTime.parse(startsAt))) {

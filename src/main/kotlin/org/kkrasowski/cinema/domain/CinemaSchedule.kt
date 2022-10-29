@@ -1,9 +1,6 @@
 package org.kkrasowski.cinema.domain
 
-import arrow.core.Either
-import arrow.core.Validated
-import arrow.core.invalid
-import arrow.core.valid
+import arrow.core.*
 import org.kkrasowski.cinema.domain.RoomOccupation.Attribute
 import java.time.LocalDateTime
 
@@ -18,11 +15,11 @@ class CinemaSchedule(private val version: Long,
     fun schedule(film: Film, roomName: RoomName, startsAt: LocalDateTime): Either<Failure, ScheduledSeance> {
         return rooms
             .getByName(roomName)
-            .let { createScheduledSeance(it, film, startsAt) }
-            .validate()
-            .toEither()
+            .map { createScheduledSeance(it, film, startsAt) }
+            .flatMap { it.validate() }
     }
 
+    // TODO: Add comment WHY this is not extracted to separate class
     private fun createScheduledSeance(room: Room, film: Film, startsAt: LocalDateTime) = ScheduledSeance(
         version = version + 1,
         occupations = listOf(
@@ -56,11 +53,12 @@ class CinemaSchedule(private val version: Long,
     private fun createPremiereAttribute(type: Film.Type) = Attribute.PREMIERE
         .takeIf { type == Film.Type.PREMIERE }
 
+    // TODO: Add comment WHY this is not extracted to separate class
     private fun ScheduledSeance.validate() = when {
-        clashesWithOtherSeance() -> Failure("Clashes with other seance or is unavailable").invalid()
-        isNotWithinPremiereHours() -> Failure("Is not within premiere hours").invalid()
-        isNotWithinWorkingHours() -> Failure("Is not within working hours").invalid()
-        else -> this.valid()
+        clashesWithOtherSeance() -> failureOf("Clashes with other seance or is unavailable")
+        isNotWithinPremiereHours() -> failureOf("Is not within premiere hours")
+        isNotWithinWorkingHours() -> failureOf("Is not within working hours")
+        else -> this.right()
     }
 
     private fun ScheduledSeance.clashesWithOtherSeance() = occupations
@@ -74,5 +72,9 @@ class CinemaSchedule(private val version: Long,
 
 }
 
+private fun failureOf(reason: String) = Failure(reason).left()
+
 // TODO: Move to Room file along with typealias
-fun Rooms.getByName(name: RoomName) = first { it.name == name }
+fun Rooms.getByName(name: RoomName) = firstOrNull { it.name == name }
+    ?.right()
+    ?: Failure("""There is no such room as "$name".""").left()

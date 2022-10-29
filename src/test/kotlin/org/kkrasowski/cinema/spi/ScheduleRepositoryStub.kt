@@ -34,8 +34,7 @@ class ScheduleRepositoryStub : ScheduleRepository {
         return failureReason
             ?.let { Failure(it) }
             ?.left()
-            ?: scheduledSeance.right()
-                .tap { this.occupations.addAll(it.occupations) }
+            ?: storeAndReturn(scheduledSeance)
     }
 
     fun hasVersion(version: Long) = apply { this.version = version }
@@ -55,4 +54,12 @@ class ScheduleRepositoryStub : ScheduleRepository {
     fun containsOccupation(occupation: RoomOccupation) = apply { occupations.add(occupation) }
 
     fun saveFailsDueTo(reason: String) = apply { this.failureReason = reason }
+
+    /**
+     * Added this private method due to strange -jvm-target IntelliJ error.
+     * Even this error appeared, the builds were going just fine.
+     */
+    private fun storeAndReturn(scheduledSeance: ScheduledSeance) = scheduledSeance
+        .also { this.occupations.addAll(it.occupations) }
+        .right()
 }

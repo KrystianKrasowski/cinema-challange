@@ -5,7 +5,10 @@ import java.time.temporal.TemporalAmount
 
 data class Room(val name: RoomName, val maintenanceTime: Duration)
 
-data class RoomName(val value: String)
+data class RoomName(val value: String) {
+
+    override fun toString(): String = value
+}
 
 data class RoomOccupation(val roomName: RoomName, val label: Label, private val slot: DateTimeSlot, private val attributes: Collection<Attribute>) {
 
