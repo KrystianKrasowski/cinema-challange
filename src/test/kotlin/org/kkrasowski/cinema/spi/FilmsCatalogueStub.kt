@@ -7,8 +7,8 @@ class FilmsCatalogueStub : FilmsCatalogue {
 
     private val films = mutableListOf<Film>()
 
-    override fun find(title: FilmTitle): Film {
-        return films.first { it.title == title }
+    override fun find(title: FilmTitle): Film? {
+        return films.firstOrNull { it.title == title }
     }
 
     fun containsFilm(film: Film) {

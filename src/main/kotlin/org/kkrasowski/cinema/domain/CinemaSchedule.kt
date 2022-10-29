@@ -1,5 +1,6 @@
 package org.kkrasowski.cinema.domain
 
+import arrow.core.Either
 import arrow.core.Validated
 import arrow.core.invalid
 import arrow.core.valid
@@ -14,11 +15,12 @@ class CinemaSchedule(private val version: Long,
                      private val rooms: Rooms,
                      private val configuration: Configuration) {
 
-    fun schedule(film: Film, roomName: RoomName, startsAt: LocalDateTime): Validated<Failure, ScheduledSeance> {
+    fun schedule(film: Film, roomName: RoomName, startsAt: LocalDateTime): Either<Failure, ScheduledSeance> {
         return rooms
             .getByName(roomName)
             .let { createScheduledSeance(it, film, startsAt) }
             .validate()
+            .toEither()
     }
 
     private fun createScheduledSeance(room: Room, film: Film, startsAt: LocalDateTime) = ScheduledSeance(

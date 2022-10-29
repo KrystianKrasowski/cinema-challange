@@ -189,7 +189,19 @@ class FilmSchedulerImplTest {
             .hasReason("Saving failure")
     }
 
-    fun `chosen film has not been found in the catalogue`() {}
+    @Test
+    fun `chosen film has not been found in the catalogue`() {
+        // given
+        filmCatalogue.containsFilm(filmOf("Cinderella", "PT2H"))
+
+        // when
+        val result = filmScheduler.schedule("Shrek", "Room 1", "2022-10-21T12:00:00")
+
+        // then
+        assertThat(result)
+            .isFailure()
+            .hasReason("""Film catalogue does not contain the film "Shrek".""")
+    }
 
     fun `chosen room does not appear in the repository`() {}
 

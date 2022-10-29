@@ -5,5 +5,5 @@ import org.kkrasowski.cinema.domain.FilmTitle
 
 interface FilmsCatalogue {
 
-    fun find(title: FilmTitle): Film
+    fun find(title: FilmTitle): Film?
 }

@@ -15,4 +15,7 @@ data class Film(val title: FilmTitle, val time: Duration, val type: Type, val di
     }
 }
 
-data class FilmTitle(val value: String)
+data class FilmTitle(val value: String) {
+
+    override fun toString(): String = value
+}
