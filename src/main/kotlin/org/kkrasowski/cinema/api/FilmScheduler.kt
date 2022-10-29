@@ -1,11 +1,11 @@
 package org.kkrasowski.cinema.api
 
-import org.kkrasowski.cinema.domain.FilmTitle
-import org.kkrasowski.cinema.domain.RoomName
-import org.kkrasowski.cinema.domain.ScheduleResult
+import arrow.core.Either
+import arrow.core.Validated
+import org.kkrasowski.cinema.domain.*
 import java.time.LocalDateTime
 
 interface FilmScheduler {
 
-    fun schedule(filmTitle: FilmTitle, roomName: RoomName, startsAt: LocalDateTime): ScheduleResult
+    fun schedule(filmTitle: FilmTitle, roomName: RoomName, startsAt: LocalDateTime): Either<Failure, ScheduledSeance>
 }

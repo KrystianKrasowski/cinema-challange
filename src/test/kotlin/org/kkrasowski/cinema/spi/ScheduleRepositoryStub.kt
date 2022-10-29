@@ -1,5 +1,8 @@
 package org.kkrasowski.cinema.spi
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import org.kkrasowski.cinema.domain.*
 import java.time.Duration
 import java.time.temporal.TemporalAmount
@@ -14,6 +17,7 @@ class ScheduleRepositoryStub : ScheduleRepository {
     private var closingHour: TemporalAmount = Duration.ofHours(0)
     private var premieresStartAt: TemporalAmount = Duration.ofHours(0)
     private var premieresEndAt: TemporalAmount = Duration.ofHours(0)
+    private var failureReason: String? = null
 
     private val configuration
         get() = Configuration(openingHour, closingHour, premieresStartAt, premieresEndAt)
@@ -24,6 +28,14 @@ class ScheduleRepositoryStub : ScheduleRepository {
 
     override fun save(version: Long, occupations: Collection<RoomOccupation>) {
         occupations.forEach { this.occupations.add(it) }
+    }
+
+    override fun save(scheduledSeance: ScheduledSeance): Either<Failure, ScheduledSeance> {
+        return failureReason
+            ?.let { Failure(it) }
+            ?.left()
+            ?: scheduledSeance.right()
+                .tap { this.occupations.addAll(it.occupations) }
     }
 
     fun hasVersion(version: Long) = apply { this.version = version }
@@ -41,4 +53,6 @@ class ScheduleRepositoryStub : ScheduleRepository {
     fun hasDefinedRoom(room: Room) = apply { rooms.add(room) }
 
     fun containsOccupation(occupation: RoomOccupation) = apply { occupations.add(occupation) }
+
+    fun saveFailsDueTo(reason: String) = apply { this.failureReason = reason }
 }

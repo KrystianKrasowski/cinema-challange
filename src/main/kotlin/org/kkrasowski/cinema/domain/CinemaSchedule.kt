@@ -1,5 +1,6 @@
 package org.kkrasowski.cinema.domain
 
+import arrow.core.Validated
 import org.kkrasowski.cinema.domain.RoomOccupation.Attribute
 import java.time.LocalDateTime
 
@@ -11,13 +12,14 @@ class CinemaSchedule(private val version: Long,
                      private val rooms: Rooms,
                      private val configuration: Configuration) {
 
-    fun schedule(film: Film, roomName: RoomName, startsAt: LocalDateTime): ScheduleResult {
-        return createSuccess(rooms.getByName(roomName), film, startsAt)
-            .takeIf { it.isValid() }
-            ?: ScheduleResult.Failure
+    fun schedule(film: Film, roomName: RoomName, startsAt: LocalDateTime): Validated<Failure, ScheduledSeance> {
+        return rooms
+            .getByName(roomName)
+            .let { createScheduledSeance(it, film, startsAt) }
+            .validate()
     }
 
-    private fun createSuccess(room: Room, film: Film, startsAt: LocalDateTime) = ScheduleResult.Success(
+    private fun createScheduledSeance(room: Room, film: Film, startsAt: LocalDateTime) = ScheduledSeance(
         version = version + 1,
         occupations = listOf(
             RoomOccupation(
@@ -50,7 +52,13 @@ class CinemaSchedule(private val version: Long,
     private fun createPremiereAttribute(type: Film.Type) = Attribute.PREMIERE
         .takeIf { type == Film.Type.PREMIERE }
 
+    private fun ScheduledSeance.validate() = Validated.Valid(this)
+        .takeIf { isValid() }
+        ?: Validated.Invalid(Failure("Seance is invalid"))
+
     private fun ScheduleResult.Success.isValid() = occupations.all { it.isValid() }
+
+    private fun ScheduledSeance.isValid() = occupations.all { it.isValid() }
 
     private fun RoomOccupation.isValid() = scheduledOccupations.noneClashesWith(this) && isWithinValidHours()
 

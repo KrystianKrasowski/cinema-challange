@@ -1,5 +1,7 @@
 package org.kkrasowski.cinema.application
 
+import arrow.core.Either
+import arrow.core.Validated
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -165,13 +167,29 @@ class FilmSchedulerImplTest {
             )))
     }
 
+    @Test
+    fun `schedule seance save fails`() {
+        // given
+        filmCatalogue.containsFilm(film3DOf("Avatar", "PT2H"))
+        scheduleRepository
+            .hasDefinedRoom(roomOf("Room 1", "PT1H"))
+            .saveFailsDueTo("Saving failure")
+
+        // when
+        val result = filmScheduler.schedule("Avatar", "Room 1", "2022-10-21T09:00:00")
+
+        // then
+        assertThat(result).isFailure()
+    }
+
     fun `chosen film has not been found in the catalogue`() {}
 
     fun `chosen room does not appear in the repository`() {}
 
-    private fun FilmScheduler.schedule(title: String, roomName: String, startsAt: String) = schedule(
-        filmTitle = title.toFilmTitle(),
-        roomName = roomName.toRoomName(),
-        startsAt = LocalDateTime.parse(startsAt)
-    )
+    private fun FilmScheduler.schedule(title: String, roomName: String, startsAt: String): ScheduleResult {
+        return when (val schedule = schedule(title.toFilmTitle(), roomName.toRoomName(), LocalDateTime.parse(startsAt))) {
+            is Either.Right -> ScheduleResult.Success(schedule.value.version, schedule.value.occupations)
+            is Either.Left -> ScheduleResult.Failure(schedule.value.reason)
+        }
+    }
 }
